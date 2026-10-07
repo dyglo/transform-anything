@@ -29,3 +29,9 @@ Fractional region bounds round outward at execution, covering all intersecting p
 Headers identify PNG/JPEG/WebP independently of supplied MIME or filenames; full browser decoding then establishes dimensions and readability. Unsupported/corrupt content creates no object. MIME normalization changes only the Blob type, retaining original bytes.
 
 Before execution, the engine independently clones and validates parameters. Executors receive a second copy; recorded parameters preserve what was validated even while awaiting processing. Failure uses stable TransformError codes and preserves the prior graph. Output MIME and fresh identity are checked before the result can commit.
+
+## SS-03 execution contract
+
+Transformation definitions now declare minimum/maximum input and output counts. Defaults and validation receive ordered object arrays; capability resolution checks all MIME types, input counts and unique identities. Executors consume ordered arrays and return arrays. Existing image operations explicitly remain one-input/one-output. The engine accepts a single-object shorthand for callers but normalizes to the same array contract.
+
+One-to-many, many-to-one and many-to-many execution are supported in the shared contract. All output identities/counts/MIME types are checked before any graph commit. appendResult validates existing sources, unique fresh outputs, exact ordered relationships and operation identity before committing the whole result. IndexedDB persists every output in the existing atomic transaction. Single-object workflows and old operation records retain their stored shapes. Product selection and concrete compositions are the next SS-03 increment; PDF operations are not yet implemented.

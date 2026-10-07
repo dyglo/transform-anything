@@ -71,3 +71,9 @@ Input detection checks PNG/JPEG/WebP magic bytes before browser decoding, so a m
 The engine takes a validated parameter snapshot before async execution and passes an independent copy to the executor. Caller/executor mutations cannot corrupt the recorded provenance. `TransformError` provides stable codes for compatibility, validation, unavailable executors, execution failure and invalid output, with user-facing messages and original causes. Output identity must differ from the source; the graph commits only after successful processing.
 
 ESLint now covers JavaScript/TypeScript errors and React hook ordering. TypeScript remains the strict type check; Prettier owns formatting. Playwright optionally selects an installed Chromium via an explicit executable-path variable when managed browser downloads are restricted.
+
+## SS-03 execution contract
+
+Transformation definitions now declare minimum/maximum input and output counts. Defaults and validation receive ordered object arrays; capability resolution checks all MIME types, input counts and unique identities. Executors consume ordered arrays and return arrays. Existing image operations explicitly remain one-input/one-output. The engine accepts a single-object shorthand for callers but normalizes to the same array contract.
+
+One-to-many, many-to-one and many-to-many execution are supported in the shared contract. All output identities/counts/MIME types are checked before any graph commit. appendResult validates existing sources, unique fresh outputs, exact ordered relationships and operation identity before committing the whole result. IndexedDB persists every output in the existing atomic transaction. Single-object workflows and old operation records retain their stored shapes. Product selection and concrete compositions are the next SS-03 increment; PDF operations are not yet implemented.

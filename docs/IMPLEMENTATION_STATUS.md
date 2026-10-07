@@ -82,3 +82,7 @@ Important remaining work: actual multi-input/output execution, local frames/comb
 ## Exact next task
 
 **SS-03: introduce true multi-input compatibility/execution and implement local frame/background/padding plus image combining.** See NEXT_TASK.md for dependencies, engineering entry points and acceptance checks. There is no blocker for this local next slice. Remote provisioning/deployment needs Cloudflare credentials and a separate release request.
+
+## SS-03 contract increment — 7 October 2026
+
+IN PROGRESS: array execution, declared input/output cardinality, all-input compatibility, atomic graph commits and multi-output storage recovery are implemented. 39 unit tests, all 15 existing browser scenarios, lint/typecheck/format and production build passed for this increment. Concrete frame/combine operations and workspace selection are the next increment; SS-03 is not marked complete.

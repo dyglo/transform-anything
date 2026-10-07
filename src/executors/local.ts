@@ -78,7 +78,8 @@ async function process(req: RenderRequest): Promise<RenderResult> {
 }
 export const localExecutor: Executor = {
   supports: (req) => req === 'local-image' || req === 'local-background',
-  async execute(object, operation, parameters, context) {
+  async execute(objects, operation, parameters, context) {
+    const object = objects[0];
     const blob = await resolveBytes(object.storage);
     const mime = (
       operation.id === 'remove-bg' || operation.id === 'annotate'
@@ -95,16 +96,18 @@ export const localExecutor: Executor = {
           : await process({ blob, operation: operation.id, parameters, mime });
     const id = crypto.randomUUID();
     const ext = mime === 'image/jpeg' ? 'jpg' : mime.split('/')[1];
-    return {
-      id,
-      type: 'image',
-      mimeType: result.blob.type,
-      name: `${object.name.replace(/\.[^.]+$/, '')}-${operation.id}.${ext}`,
-      size: result.blob.size,
-      createdAt: Date.now(),
-      metadata: { width: result.width, height: result.height },
-      storage: { kind: 'blob', blob: result.blob },
-      preview: { objectId: id },
-    };
+    return [
+      {
+        id,
+        type: 'image',
+        mimeType: result.blob.type,
+        name: `${object.name.replace(/\.[^.]+$/, '')}-${operation.id}.${ext}`,
+        size: result.blob.size,
+        createdAt: Date.now(),
+        metadata: { width: result.width, height: result.height },
+        storage: { kind: 'blob', blob: result.blob },
+        preview: { objectId: id },
+      },
+    ];
   },
 };

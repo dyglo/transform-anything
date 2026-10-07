@@ -124,7 +124,7 @@ export default function Workspace() {
         compatible(active).find((o) => o.id === operationId) ??
         registry.find((o) => o.id === 'resize')!;
       if (op.id !== operationId) setOperationId(op.id);
-      setParameters(op.defaults(active));
+      setParameters(op.defaults([active]));
     }
   }, [active, operationId]);
   useEffect(() => {

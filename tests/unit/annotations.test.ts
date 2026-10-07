@@ -81,7 +81,7 @@ describe('annotation schema and source geometry', () => {
     });
   });
   it('validates before executing and takes an independent structured parameter snapshot', async () => {
-    const execute = vi.fn(async () => ({ ...object, id: 'out' }));
+    const execute = vi.fn(async () => [{ ...object, id: 'out' }]);
     await expect(
       executeTransformation(object, op, { annotations: { version: 1, elements: [] } }, [
         { supports: () => true, execute },
