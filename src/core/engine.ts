@@ -55,8 +55,13 @@ export async function executeTransformation(
     outputs.length < operation.outputs.min ||
     outputs.length > operation.outputs.max ||
     new Set(outputs.map((o) => o?.id)).size !== outputs.length ||
-    outputs.some(
-      (o) => !o || !o.id || inputIds.has(o.id) || !operation.produces.includes(o.mimeType),
+    Array.from(outputs).some(
+      (o) =>
+        !o ||
+        typeof o.id !== 'string' ||
+        !o.id ||
+        inputIds.has(o.id) ||
+        !operation.produces.includes(o.mimeType),
     )
   )
     throw new TransformError(
