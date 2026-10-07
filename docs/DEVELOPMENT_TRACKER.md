@@ -29,7 +29,7 @@ All tasks below completed by 6 October 2026. Detailed existing verification is i
 | IP-03  | Remove BG                                                                        | DONE   | `src/executors/background.worker.ts`, `removeBackground.ts`, model assets; real alpha/chaining/export/recovery and model failure checks; dedicated worker and same-origin assets |
 | DOC-01 | Complete docs index, full scope, status ledger and next-agent brief              | DONE   | `docs/` and root `AGENTS.md` reading/update rules; source briefs preserved with superseded decisions explained; document formatting/link checks                                  |
 
-Current verification on 7 October 2026: 34 unit tests and 15 browser scenarios passed. Typecheck, ESLint, Prettier, production/staging/local builds and production Wrangler dry run pass. See IMPLEMENTATION_STATUS.md for current evidence. Earlier records below retain their historical dates.
+Current SS-03 verification on 7 October 2026: 47 unit tests and 21 browser scenarios passed, plus a final mobile/touch recheck. Typecheck, ESLint, Prettier and production build pass. Staging/local builds and production Wrangler dry run passed during prerequisite verification. See IMPLEMENTATION_STATUS.md for current evidence. Earlier records below retain their historical dates.
 
 ## Ordered implementation queue
 
