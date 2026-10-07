@@ -71,9 +71,22 @@ describe('shared multi-input/output execution', () => {
     expect(compatibleInputs([a, b])).toEqual([]);
     expect(supportsInputs(op, [a, b])).toBe(true);
   });
+  it('rejects sparse output arrays and non-string identities as typed failures', async () => {
+    for (const outputs of [
+      new Array<TransformObject>(1),
+      [{ ...image('x'), id: 123 as unknown as string }],
+    ]) {
+      await expect(
+        executeTransformation([a, b], op, {}, [
+          { supports: () => true, execute: async () => outputs },
+        ]),
+      ).rejects.toMatchObject({ code: 'INVALID_OUTPUT' });
+    }
+  });
   it('rejects incomplete outputs and graph collisions without partial commits', async () => {
     for (const outputs of [
       [],
+      [image('x'), image('y'), image('z'), image('w')],
       [image('x'), image('x')],
       [a],
       [{ ...image('x'), mimeType: 'text/plain' }],
