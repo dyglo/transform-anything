@@ -1,4 +1,5 @@
 import type { AnnotationDocument, AnnotationElement, TransformObject } from './types';
+import { pixelBounds, MAX_BLUR_PIXELS } from './regions';
 
 export function validateAnnotations(
   value: unknown,
@@ -6,7 +7,7 @@ export function validateAnnotations(
 ): asserts value is AnnotationDocument {
   const fail = () => {
     throw new Error(
-      'Invalid annotations. Use schema version 1, up to 100 elements, valid styles and boxes inside the image; text labels require 1–500 characters.',
+      'Invalid annotations. Use schema version 1 or 2, up to 100 elements, valid styles and boxes inside the image; text labels require 1–500 characters.',
     );
   };
   if (!value || typeof value !== 'object') return fail();
@@ -20,13 +21,14 @@ export function validateAnnotations(
   )
     return fail();
   if (
-    doc.version !== 1 ||
+    ![1, 2].includes(doc.version) ||
     !Array.isArray(doc.elements) ||
     doc.elements.length < 1 ||
     doc.elements.length > 100
   )
     return fail();
   const ids = new Set<string>();
+  let blurPixels = 0;
   for (const e of doc.elements) {
     if (
       e &&
@@ -46,6 +48,7 @@ export function validateAnnotations(
             'text',
             'flipX',
             'flipY',
+            ...(doc.version === 2 && e.kind === 'blur' ? ['blurRadius'] : []),
           ].includes(k),
       )
     )
@@ -61,7 +64,13 @@ export function validateAnnotations(
       return fail();
     ids.add(e.id);
     if (
-      !['text', 'arrow', 'rectangle', 'highlight'].includes(e.kind) ||
+      ![
+        'text',
+        'arrow',
+        'rectangle',
+        'highlight',
+        ...(doc.version === 2 ? ['blur', 'redact'] : []),
+      ].includes(e.kind) ||
       !/^#[0-9a-f]{6}$/i.test(e.color)
     )
       return fail();
@@ -90,6 +99,19 @@ export function validateAnnotations(
       (e.kind === 'highlight' && e.opacity > 0.8)
     )
       return fail();
+    if (e.kind === 'redact' || e.kind === 'blur') {
+      if (e.opacity !== 1) throw new Error('Blur and opaque redaction require full opacity.');
+      if (e.kind === 'blur') {
+        if (!Number.isSafeInteger(e.blurRadius) || e.blurRadius! < 1 || e.blurRadius! > 64)
+          throw new Error('Blur radius must be a whole number from 1 to 64 source pixels.');
+        const bounds = pixelBounds(e);
+        blurPixels += bounds.width * bounds.height;
+        if (blurPixels > MAX_BLUR_PIXELS)
+          throw new Error(
+            'Blur regions must total 4 megapixels or less. Resize first or use opaque redaction.',
+          );
+      }
+    }
     if (
       typeof e.flipX !== 'boolean' ||
       typeof e.flipY !== 'boolean' ||

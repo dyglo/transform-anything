@@ -1,42 +1,84 @@
 # Implementation status
 
-Updated: 6 October 2026. Task statuses live in [DEVELOPMENT_TRACKER.md](DEVELOPMENT_TRACKER.md). The next proposed implementation is [SS-01: Screenshot Studio annotations](NEXT_TASK.md); it has not started.
+Updated: 7 October 2026. The stable ledger is [DEVELOPMENT_TRACKER.md](DEVELOPMENT_TRACKER.md). The next task is [SS-03: frame/padding/combine](NEXT_TASK.md).
 
-## Implemented
+## Repository inspection and preservation
 
-- React/Vite/TypeScript/Tailwind application with Radix Select, Switch and clear-session confirmation; Zustand session state.
-- Transform landing hero using the unchanged landscape; input, product explanation, and truthful ten-family roadmap.
-- Image import, draggable crop corners and selection with synchronized numeric fields, aspect-aware resize, rotation, PNG/JPEG/WebP conversion, JPEG/WebP quality controls.
-- Remove BG: real local U²-Net inference, lazy same-origin model/runtime assets, loading/processing feedback, and original-size transparent PNG output through the common engine.
-- Shared registry, resolver, executor contract, worker rendering, non-destructive graph and branching.
-- Multiple import roots, download, PNG clipboard export, 24-hour IndexedDB recovery, clear session, visible failures and preview URL cleanup.
-- Local/staging/production Cloudflare Workers Static Assets configuration, no cloud resource provisioning.
-- Focused engine/storage/render tests and browser workflow tests.
-- Documentation consolidated under `docs/`, including full family scope, retained source briefs, a stable task ledger, next-task acceptance checks, and root agent handoff/update conventions.
+The clean input repository at `1d569d9` already contained React/Vite/TypeScript, npm lockfile, Zustand/Radix/Tailwind/Lucide, the supplied landscape/branding, the shared image engine, ONNX Remove BG, annotations, IndexedDB and tests. It had no deployed cloud resources or bindings. Existing work/assets/licenses were retained. See [REPOSITORY_INSPECTION.md](REPOSITORY_INSPECTION.md).
 
-## Deferred
+## Architecture actually implemented
 
-Annotation, compare, broader canvas editing, bulk transforms/ZIP export, recipes, text/URL/PDF/data/media capabilities, sharing, accounts, remote storage/processing, jobs, web capture and persistent projects. Cloud storage reference types are architectural extension points, not functional cloud implementations.
+Object → Registry → Engine → Executor → New Object → Graph. MIME compatibility, validated parameter contracts, local Canvas/image/background executors, fresh output objects, operation records and graph branching are real. Storage references separate bytes from metadata. IndexedDB writes graph and bytes atomically, serialized across save/clear; the local session expires 24 hours after creation with lazy cleanup. Preview/download URLs are revoked.
 
-## Verification
+This task added byte-signature image detection with MIME normalization, typed engine errors, independent parameter snapshots taken before async execution, and a fresh-output identity check. Structured annotation version 1 recovery remains supported; new version 2 region parameters are validated and retained. Multi-input/output arrays remain graph extension points: the executor still takes one image into one image.
 
-Verified on 6 October 2026:
+## Product experience
 
-- Type checking and source formatting checks passed.
-- 19 unit tests passed: registry/parameter validation, graph branching, executor failures, storage recovery/expiry, encoder fallback, transparency, main-thread Canvas fallback, crop bounds/corner anchoring, background model preprocessing, and soft-matte normalization.
-- Eight browser acceptance scenarios passed, covering desktop/mobile landing, chained WebP export and JPEG branch, refresh/clear, invalid and corrupt inputs, clipboard denial, quota failure, clipboard paste, fallback processing, preview URL cleanup, expired-byte deletion, scaled portrait crop dragging/movement/keyboard adjustment, real mobile touch cropping, real background inference with alpha/chaining/export/recovery, and model-load failure preserving history.
-- Browser workflow recorded no non-GET network requests during image processing and no page errors.
-- Production and staging builds selected their correct Cloudflare targets; the production Wrangler deployment dry run passed with no bindings. No resources were provisioned and nothing was deployed.
-- Hero reviewed at the reference aspect ratio (1293 × 828) and on a 390px mobile viewport. Workspace desktop/mobile screenshots reviewed.
-- Automated accessibility audits found no violations after contrast fixes; hero contrast over the image background requires manual review because the scanner cannot resolve its pseudo-element background.
+Input-first landing with unchanged landscape/hero branding, browse/drop/clipboard image input and secondary ten-family discovery. Supported types and planned families are explicit. Workspace includes compatible actions, scaled preview, accessible parameters/draft controls, original/intermediate history, branching, continued transformations and copy/download. Desktop and 390px mobile interactions are verified. Original-retention/redaction disclosure is visible in the editor; pending drafts are tab-local and warn on reload.
 
-Browser screenshots and accessibility reports are saved under ignored `artifacts/`. The supplied raster reference supports composition matching, not a claim of source-level or font-level identity. Live account deployment is intentionally unverified.
+## Real transformations
 
-## Current limitations and extension points
+- Crop, pointer/touch crop handles, aspect-aware resize, rotate, PNG/JPEG/WebP convert, JPEG/WebP optimize.
+- Local ONNX Remove BG → original-size transparent PNG; lazy same-origin model/runtime assets.
+- Screenshot Studio: text, arrows, rectangle outlines, highlights, region blur and opaque redaction through the shared Annotate operation.
+- Blur is a deterministic premultiplied box filter with a 1–64 source-pixel radius, capped at 4 megapixels of regions per operation.
+- Redaction rounds edges outward and replaces covered RGB/alpha with an opaque color. Downloads contain only committed output pixels. Original/session bytes remain until clear/expiry; blur is cosmetic.
 
-- Core Image Prep is working; this does not complete the full ten-family product. Annotation, blur/redaction, frames and Compare are not implemented.
-- Graph operation records support input/output arrays, but the current executor executes one image into one output. True multi-input/output execution, batch controls and recipes need additional implementation.
-- Remove BG is automatic segmentation; fine hair and complex scenes may need editing. Its first use loads about 18 MiB of same-origin model/runtime assets, and requires Worker/OffscreenCanvas support. Output retains original dimensions; processing failure leaves the original active.
-- Current parameters are primitive values. Annotation requires a deliberate structured, versioned schema extension and compatible persistence handling.
-- Other object/storage/execution types in interfaces are extension points. Text/PDF/data/URL inputs, cloud storage/jobs/auth and remote executors are not working implementations.
-- Documentation maintenance marks verified features done and identifies the next task; it does not automatically start that task.
+## Transformation chains verified
+
+1. Image → crop → resize → WebP → download; separate JPEG branch and recovery.
+2. Screenshot → text/arrow/outline/highlight → new PNG → resize → WebP → copy/download; original branch and refresh.
+3. Image → redaction + blur → downloaded PNG (exact full-preview/pixel comparison) → crop → resize → WebP → optimize → download → refresh → new original branch.
+4. Image → real background inference → transparent PNG → resize → download → recovery.
+
+No intermediate download/re-upload is required. Network checks observed no image/content uploads or third-party processing. The existing clipboard test checks the browser write integration; denied permission is separately exercised.
+
+## Ten-family status
+
+| Family            | Status                                                | Remaining work                                                                  |
+| ----------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Screenshot Studio | Tested, partial; SS-01/SS-02 done                     | Frames/padding/combine, freeform editing                                        |
+| Compare           | Planned                                               | Two-input selection, alignment, slider/overlay/difference                       |
+| Image Prep        | Tested, partial                                       | Metadata and additional background controls                                     |
+| ShareCard         | Planned                                               | Typed text input and shared compositions; URL later                             |
+| Document Clean    | Planned                                               | Local PDF and true multi-output operations; advanced redaction/signatures later |
+| Data → Visual     | Planned                                               | Typed data input, cleaning, charts/tables                                       |
+| Mockup            | Planned                                               | Frame/composition foundation and licensed templates                             |
+| File Transformer  | Tested shared image conversion; other formats planned | Real browser-supported document/media codecs                                    |
+| Text → Visual     | Planned                                               | Text objects and designed visual templates                                      |
+| Web Capture       | Planned; cloud prerequisite deferred                  | Secure URL/capture/job/storage slice                                            |
+
+## Cloudflare foundation
+
+Workers Static Assets/Vite/Wrangler local/staging/production targets are configured and build. Production Wrangler dry run passes without bindings. R2 byte references and cloud-job/browser-capture/external executor requirements are typed extension points; ARCHITECTURE.md documents Workers/R2/D1/KV/Queues/Workflows/Durable Objects/Browser Run/external boundaries and prerequisites. No processing API or speculative resources were added.
+
+No Cloudflare credentials or identities are configured in this environment. Live deployment and resource provisioning remain unavailable and unverified; they do not block local use. Nothing was deployed or provisioned.
+
+## Validation — 7 October 2026
+
+| Check                                                                    | Result                                      |
+| ------------------------------------------------------------------------ | ------------------------------------------- |
+| `npm run format:check`                                                   | Pass                                        |
+| `npm run lint`                                                           | Pass, zero ESLint errors                    |
+| `npm run typecheck`                                                      | Pass                                        |
+| `npm test`                                                               | 34 unit tests pass across 8 files           |
+| `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e` | 15 browser scenarios pass, 53.5 seconds     |
+| `npm run build:production`                                               | Pass; generated target transform-production |
+| `npx wrangler deploy --dry-run` after production build                   | Pass; no bindings; no deployment            |
+| `npm run build:staging`                                                  | Pass; generated target transform-staging    |
+| `npm run build`                                                          | Pass; generated target transform-local      |
+| `git diff --check` and documentation local-link check                    | Pass                                        |
+
+Browser tests cover desktop/mobile input, pointer/touch/keyboard editing, actual output pixels and transparency, graph/branching/recovery, v1 provenance compatibility, malformed parameters, damaged/mislabelled input, model/encoding/clipboard/storage failures, expiry/clear and object URL cleanup. Desktop/mobile screenshots under ignored artifacts were reviewed. Chromium is the browser validated in this environment; other browser engines were not exercised. No new automated accessibility audit was run; keyboard/mobile/accessibility semantics are covered by the interaction checks.
+
+Managed Playwright browser download was denied by network policy; system Chromium was used through the optional config override. Local Cloudflare dev logs report unavailable Request.cf metadata and use a placeholder; local transformation tests pass. Early browser runs were interrupted by editing/building while the dev server was active; the complete stable final run passes. Run builds after browser tests to avoid dev reloads.
+
+## Documentation and remaining work
+
+Created catalog, design system and repository inspection; retained the supplied cloud request under sources. Updated product, architecture, transformation system, privacy, status ledger, roadmap, next-task brief, docs index and root AGENTS.md. The entire ten-family long-term vision remains documented.
+
+Important remaining work: actual multi-input/output execution, local frames/combine/Compare, typed text/data/URL/PDF input, batches/ZIP, recipes, additional formats, secure cloud capture and opt-in persistence/sharing. They have no inert processing buttons. Existing original assets remain untouched.
+
+## Exact next task
+
+**SS-03: introduce true multi-input compatibility/execution and implement local frame/background/padding plus image combining.** See NEXT_TASK.md for dependencies, engineering entry points and acceptance checks. There is no blocker for this local next slice. Remote provisioning/deployment needs Cloudflare credentials and a separate release request.

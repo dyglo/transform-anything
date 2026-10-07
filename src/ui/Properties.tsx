@@ -194,14 +194,14 @@ export function Properties({
               {p.format !== 'image/png' ? (
                 <label className="field quality-field">
                   <span>
-                    Quality <strong>{Number(p.quality)}%</strong>
+                    Quality <strong>{Number(p.quality ?? 90)}%</strong>
                   </span>
                   <input
                     aria-label="Quality"
                     type="range"
                     min="1"
                     max="100"
-                    value={Number(p.quality)}
+                    value={Number(p.quality ?? 90)}
                     onChange={(e) => set('quality', Number(e.target.value))}
                   />
                   <div className="range-labels">

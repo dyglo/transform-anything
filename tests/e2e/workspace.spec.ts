@@ -198,3 +198,30 @@ test('clipboard input, main-thread fallback, object URL cleanup, and expiration'
   });
   expect(count).toBe(0);
 });
+
+test('input detection uses actual bytes when an image has a wrong MIME and filename', async ({
+  page,
+}) => {
+  await page.goto('/workspace');
+  const png = await page.evaluate(() => {
+    const c = Object.assign(document.createElement('canvas'), { width: 40, height: 20 });
+    c.getContext('2d')!.fillRect(0, 0, 40, 20);
+    return c.toDataURL().split(',')[1];
+  });
+  await page
+    .locator('input[type=file]')
+    .last()
+    .setInputFiles({
+      name: 'wrong.jpg',
+      mimeType: 'image/jpeg',
+      buffer: Buffer.from(png, 'base64'),
+    });
+  await expect(page.getByRole('button', { name: 'Apply resize' })).toBeEnabled();
+  await expect(page.locator('.preview-info')).toContainText('PNG');
+  await expect(page.getByRole('button', { name: 'Optimize Lighten the file' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Apply resize' }).click();
+  await expect(page.locator('.history-node')).toHaveCount(2);
+  const downloaded = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download', exact: true }).click();
+  expect((await downloaded).suggestedFilename()).toBe('wrong-resize.png');
+});

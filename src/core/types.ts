@@ -20,7 +20,7 @@ export type OperationId =
   'crop' | 'resize' | 'rotate' | 'convert' | 'compress' | 'remove-bg' | 'annotate';
 export interface AnnotationElement {
   id: string;
-  kind: 'text' | 'arrow' | 'rectangle' | 'highlight';
+  kind: 'text' | 'arrow' | 'rectangle' | 'highlight' | 'blur' | 'redact';
   x: number;
   y: number;
   width: number;
@@ -32,9 +32,10 @@ export interface AnnotationElement {
   text: string;
   flipX: boolean;
   flipY: boolean;
+  blurRadius?: number;
 }
 export interface AnnotationDocument {
-  version: 1;
+  version: 1 | 2;
   elements: AnnotationElement[];
 }
 export type Parameters = Record<string, number | string | boolean | AnnotationDocument>;

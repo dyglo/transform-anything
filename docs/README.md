@@ -1,6 +1,6 @@
 # Transform development documentation
 
-Updated: 6 October 2026. Foundation, core Image Prep, and SS-01 annotations are delivered. The next task is **SS-02: region blur and opaque redaction**.
+Updated: 7 October 2026. Foundation, core Image Prep, SS-01 annotations and SS-02 blur/opaque redaction are verified. The next task is **SS-03: frame/padding/combine and true multi-input execution**.
 
 ## Reading order
 
@@ -25,3 +25,4 @@ When starting a requested feature, mark its task `IN PROGRESS` and record any sc
 
 No documentation milestone authorizes deployment, cloud provisioning, communication to others, or adding accounts. Those remain separate decisions.
 
+[TRANSFORMATION_CATALOG.md](TRANSFORMATION_CATALOG.md) summarizes all ten families and working/planned operations. [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) records interaction and visual conventions. [REPOSITORY_INSPECTION.md](REPOSITORY_INSPECTION.md) records the preserved input baseline; [the delegated cloud request](sources/CLOUD_IMPLEMENTATION_REQUEST.md) retains this task's complete supplied specification.

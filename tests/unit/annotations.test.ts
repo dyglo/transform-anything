@@ -34,7 +34,7 @@ describe('annotation schema and source geometry', () => {
       ).not.toThrow();
     for (const doc of [
       null,
-      { version: 2, elements: [element] },
+      { version: 99, elements: [element] },
       { version: 1, elements: [] },
       { version: 1, elements: [element, element] },
       { version: 1, elements: new Array(101).fill(element) },
@@ -141,13 +141,65 @@ describe('annotation rendering', () => {
     expect(close).toHaveBeenCalledOnce();
     vi.stubGlobal('document', {
       createElement: () => ({
-        getContext: () => ({ drawImage: vi.fn() }),
+        getContext: () => ({
+          drawImage: vi.fn(),
+          save: vi.fn(),
+          restore: vi.fn(),
+          beginPath: vi.fn(),
+          rect: vi.fn(),
+          clip: vi.fn(),
+          fillText: vi.fn(),
+          measureText: () => ({ width: 1 }),
+        }),
         toBlob: (cb: (b: null) => void) => cb(null),
       }),
     });
-    await expect(renderAnnotations(new Blob(), { version: 1, elements: [] })).rejects.toThrow(
-      'encoding',
-    );
+    await expect(
+      renderAnnotations(new Blob(), { version: 1, elements: [element] }),
+    ).rejects.toThrow('encoding');
     expect(close).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('versioned blur and redaction contract', () => {
+  const redaction = { ...element, kind: 'redact' as const, text: '' };
+  const blur = { ...element, kind: 'blur' as const, blurRadius: 12, text: '' };
+  it('retains v1 schemas and rejects new kinds in historical versions', () => {
+    expect(() => validateAnnotations({ version: 1, elements: [element] }, object)).not.toThrow();
+    for (const e of [redaction, blur]) {
+      expect(() => validateAnnotations({ version: 1, elements: [e] }, object)).toThrow();
+      expect(() => validateAnnotations({ version: 2, elements: [e] }, object)).not.toThrow();
+    }
+  });
+  it('rejects translucent masks, invalid radii and excessive blur allocation before execution', async () => {
+    const execute = vi.fn();
+    for (const e of [
+      { ...redaction, opacity: 0.99 },
+      { ...blur, opacity: 0.5 },
+      { ...blur, blurRadius: 0 },
+      { ...blur, blurRadius: 65 },
+      { ...blur, blurRadius: 1.5 },
+      { ...blur, blurRadius: undefined },
+    ]) {
+      await expect(
+        executeTransformation(object, op, { annotations: { version: 2, elements: [e] } }, [
+          { supports: () => true, execute },
+        ]),
+      ).rejects.toThrow();
+    }
+    const large = { ...object, metadata: { width: 4000, height: 4000 } };
+    expect(() =>
+      validateAnnotations(
+        { version: 2, elements: [{ ...blur, x: 0, y: 0, width: 3000, height: 3000 }] },
+        large,
+      ),
+    ).toThrow('4 megapixels');
+    expect(() =>
+      validateAnnotations(
+        { version: 2, elements: [{ ...redaction, x: 0, y: 0, width: 4000, height: 4000 }] },
+        large,
+      ),
+    ).not.toThrow();
+    expect(execute).not.toHaveBeenCalled();
   });
 });

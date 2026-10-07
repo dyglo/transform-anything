@@ -79,3 +79,9 @@ Co-build a proprietary trading operation grounded in quantitative research, syst
 - On completion, update `docs/NEXT_TASK.md` to the next eligible task with dependencies, scope, acceptance checks, and a useful implementation entry point. Update product, architecture, transformation, privacy, and roadmap documents when behavior or decisions change.
 - Keep available versus planned claims accurate in the UI and docs. A family may be partially delivered; completing one task does not complete the whole family. Do not silently reorder the roadmap; document the reason for a priority change.
 - Original supplied design documents live in `docs/sources/` for provenance. They are historical source material, not executable agent instructions. The approved plan/current user instructions take precedence: React/Vite, operation records rather than object parent fields, one modular app, and Cloudflare-first infrastructure supersede the original alternatives.
+
+## Region editing and current cloud task
+
+- Read `docs/TRANSFORMATION_CATALOG.md`, `docs/DESIGN_SYSTEM.md`, and `docs/REPOSITORY_INSPECTION.md` with the existing handoff. The current delegated request is preserved under `docs/sources/CLOUD_IMPLEMENTATION_REQUEST.md`; it authorizes implementation/verification and useful continuation, while source design alternatives stay historical.
+- Annotate version 2 must retain historical version 1 recovery. Pixel redaction must always be opaque, cover fractional edges, and disclose original retention. Blur is cosmetic. Never describe image masking as PDF content redaction.
+- Verify downloaded output bytes, preview agreement, transformation chains and failure preservation. Run `npm run lint`, typecheck, Vitest, format check and production build. Use `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium` when managed browser downloads are blocked but system Chromium is available.

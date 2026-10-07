@@ -93,7 +93,6 @@ test('four annotation types, draft edits, exact raster, branching, chaining and 
       height: layer.height,
     });
     const ctx = c.getContext('2d')!;
-    ctx.drawImage(document.querySelector('.preview-image') as HTMLImageElement, 0, 0);
     ctx.drawImage(layer, 0, 0);
     return c.toDataURL();
   });
@@ -130,7 +129,7 @@ test('four annotation types, draft edits, exact raster, branching, chaining and 
   expect(state.operations).toHaveLength(1);
   expect(state.objects[1].metadata).toEqual({ width: 800, height: 500 });
   expect(state.operations[0].parameters.annotations).toMatchObject({
-    version: 1,
+    version: 2,
     elements: [{ text: 'Hello\nTransform' }, {}, {}, {}],
   });
   await page.getByRole('button', { name: /1\. Original/ }).click();
@@ -170,7 +169,7 @@ test('four annotation types, draft edits, exact raster, branching, chaining and 
   await expect(page.locator('.history-node')).toHaveCount(5);
   state = await snapshot(page);
   expect(state.operations[0].parameters.annotations).toMatchObject({
-    version: 1,
+    version: 2,
     elements: [{ text: 'Hello\nTransform' }, {}, {}, {}],
   });
   await expect(page.locator('.preview-image')).toBeVisible();
@@ -213,6 +212,30 @@ test('cancel, per-image drafts, invalid parameters, failed render and malformed 
   await page.getByRole('button', { name: 'Add rectangle' }).click();
   await page.getByRole('button', { name: 'Apply annotations' }).click();
   await expect(page.locator('.history-node')).toHaveCount(3);
+  // A historical v1 annotation remains recoverable after introducing v2 regions.
+  await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve) => {
+      const r = indexedDB.open('transform-local');
+      r.onsuccess = () => resolve(r.result);
+    });
+    await new Promise<void>((resolve) => {
+      const tx = db.transaction('session', 'readwrite');
+      const store = tx.objectStore('session');
+      const r = store.get('current');
+      r.onsuccess = () => {
+        r.result.operations[0].version = 1;
+        r.result.operations[0].parameters.annotations.version = 1;
+        store.put(r.result, 'current');
+      };
+      tx.oncomplete = () => resolve();
+    });
+    db.close();
+  });
+  await page.reload();
+  await expect(page.locator('.history-node')).toHaveCount(3);
+  await expect(
+    page.getByText('Some recovered annotation parameters', { exact: false }),
+  ).toHaveCount(0);
   await page.evaluate(async () => {
     const db = await new Promise<IDBDatabase>((resolve) => {
       const r = indexedDB.open('transform-local');
