@@ -26,6 +26,8 @@ function format(p: Parameters) {
     throw new Error('Quality must be between 1 and 100.');
 }
 const common = {
+  inputs: { min: 1, max: 1 },
+  outputs: { min: 1, max: 1 },
   family: 'Image Prep',
   version: 1,
   accepts: IMAGE_MIMES,
@@ -38,8 +40,8 @@ export const registry: TransformationDefinition[] = [
     ...common,
     id: 'crop',
     name: 'Crop',
-    defaults: (o) => ({ x: 0, y: 0, width: o.metadata.width!, height: o.metadata.height! }),
-    validate: (p, o) => {
+    defaults: ([o]) => ({ x: 0, y: 0, width: o.metadata.width!, height: o.metadata.height! }),
+    validate: (p, [o]) => {
       dimensions(p);
       const x = integer(p, 'x', 0),
         y = integer(p, 'y', 0);
@@ -51,7 +53,7 @@ export const registry: TransformationDefinition[] = [
     ...common,
     id: 'resize',
     name: 'Resize',
-    defaults: (o) => ({ width: o.metadata.width!, height: o.metadata.height!, lock: true }),
+    defaults: ([o]) => ({ width: o.metadata.width!, height: o.metadata.height!, lock: true }),
     validate: dimensions,
   },
   {
@@ -68,7 +70,7 @@ export const registry: TransformationDefinition[] = [
     ...common,
     id: 'convert',
     name: 'Convert',
-    defaults: (o) => ({ format: o.mimeType, quality: 90 }),
+    defaults: ([o]) => ({ format: o.mimeType, quality: 90 }),
     validate: format,
   },
   {
@@ -76,7 +78,7 @@ export const registry: TransformationDefinition[] = [
     id: 'compress',
     name: 'Optimize',
     accepts: ['image/jpeg', 'image/webp'],
-    defaults: (o) => ({ format: o.mimeType, quality: 80 }),
+    defaults: ([o]) => ({ format: o.mimeType, quality: 80 }),
     validate: format,
   },
   {
@@ -97,9 +99,21 @@ export const registry: TransformationDefinition[] = [
     produces: ['image/png'],
     capabilities: { batch: false, preview: true, nonDestructive: true },
     defaults: () => ({ annotations: { version: 2, elements: [] } }),
-    validate: (p, o) => validateAnnotations(p.annotations, o),
+    validate: (p, [o]) => validateAnnotations(p.annotations, o),
   },
 ];
 export function compatible(object: TransformObject) {
-  return registry.filter((op) => op.accepts.includes(object.mimeType));
+  return compatibleInputs([object]);
+}
+
+export function supportsInputs(op: TransformationDefinition, objects: readonly TransformObject[]) {
+  return (
+    objects.length >= op.inputs.min &&
+    objects.length <= op.inputs.max &&
+    new Set(objects.map((o) => o.id)).size === objects.length &&
+    objects.every((o) => op.accepts.includes(o.mimeType))
+  );
+}
+export function compatibleInputs(objects: readonly TransformObject[]) {
+  return registry.filter((op) => supportsInputs(op, objects));
 }

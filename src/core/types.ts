@@ -75,17 +75,19 @@ export interface TransformationDefinition {
   produces: readonly string[];
   execution: ExecutionRequirement;
   capabilities: { batch: boolean; preview: boolean; nonDestructive: boolean };
-  defaults: (object: TransformObject) => Parameters;
-  validate: (parameters: Parameters, object: TransformObject) => void;
+  inputs: { min: number; max: number };
+  outputs: { min: number; max: number };
+  defaults: (objects: readonly TransformObject[]) => Parameters;
+  validate: (parameters: Parameters, objects: readonly TransformObject[]) => void;
 }
 export interface Executor {
   supports: (requirement: ExecutionRequirement) => boolean;
   execute: (
-    object: TransformObject,
+    objects: readonly TransformObject[],
     operation: TransformationDefinition,
     parameters: Parameters,
     context?: ExecutionContext,
-  ) => Promise<TransformObject>;
+  ) => Promise<TransformObject[]>;
 }
 export const SESSION_TTL = 24 * 60 * 60 * 1000;
 export const MAX_FILE_BYTES = 25 * 1024 * 1024;

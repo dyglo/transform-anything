@@ -19,7 +19,7 @@ describe('shared transformation engine', () => {
     let n = 0;
     const executor: Executor = {
       supports: () => true,
-      execute: async (o) => ({ ...o, id: `output-${++n}` }),
+      execute: async ([o]) => [{ ...o, id: `output-${++n}` }],
     };
     const session = { ...newSession(), objects: [original], activeId: original.id };
     const first = await executeTransformation(original, resize, { width: 50, height: 40 }, [
@@ -45,13 +45,13 @@ describe('shared transformation engine', () => {
     expect(execute).not.toHaveBeenCalled();
   });
   it('rejects excessive output size and out-of-bounds crops', () => {
-    expect(() => resize.validate({ width: 10000, height: 10000 }, original)).toThrow(
+    expect(() => resize.validate({ width: 10000, height: 10000 }, [original])).toThrow(
       '40 megapixels',
     );
-    expect(() => registry[0].validate({ x: 99, y: 0, width: 2, height: 1 }, original)).toThrow(
+    expect(() => registry[0].validate({ x: 99, y: 0, width: 2, height: 1 }, [original])).toThrow(
       'fit inside',
     );
-    expect(() => registry[0].validate({ x: 0.5, y: 0, width: 2, height: 1 }, original)).toThrow(
+    expect(() => registry[0].validate({ x: 0.5, y: 0, width: 2, height: 1 }, [original])).toThrow(
       'whole number',
     );
   });
@@ -75,8 +75,8 @@ describe('shared transformation engine', () => {
       { format: 'image/jpeg', quality: 0 },
       { format: 'image/jpeg', quality: 101 },
     ])
-      expect(() => registry[3].validate(p, original)).toThrow();
-    expect(() => registry[2].validate({ angle: 45 }, original)).toThrow();
+      expect(() => registry[3].validate(p, [original])).toThrow();
+    expect(() => registry[2].validate({ angle: 45 }, [original])).toThrow();
   });
   it('rejects missing executors and wrong output MIME types', async () => {
     await expect(
@@ -84,9 +84,9 @@ describe('shared transformation engine', () => {
     ).rejects.toThrow('not available');
     await expect(
       executeTransformation(original, resize, { width: 10, height: 10 }, [
-        { supports: () => true, execute: async () => ({ ...original, mimeType: 'text/plain' }) },
+        { supports: () => true, execute: async () => [{ ...original, mimeType: 'text/plain' }] },
       ]),
-    ).rejects.toThrow('output format');
+    ).rejects.toThrow('output formats');
   });
   it('leaves the graph intact when processing fails', async () => {
     const session = { ...newSession(), objects: [original] };
@@ -117,7 +117,7 @@ it('takes the validated snapshot before asynchronous execution and protects prov
       execute: async (_o, _op, p) => {
         await wait;
         p.width = 99;
-        return { ...original, id: 'snapshot-output' };
+        return [{ ...original, id: 'snapshot-output' }];
       },
     },
   ]);
@@ -132,7 +132,7 @@ it('returns typed errors and rejects destructive output identity', async () => {
   ).rejects.toMatchObject({ code: 'INVALID_PARAMETERS' });
   await expect(
     executeTransformation(original, resize, { width: 10, height: 10 }, [
-      { supports: () => true, execute: async () => original },
+      { supports: () => true, execute: async () => [original] },
     ]),
   ).rejects.toMatchObject({ code: 'INVALID_OUTPUT' });
 });

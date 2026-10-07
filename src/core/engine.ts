@@ -1,4 +1,5 @@
 import { TransformError } from './errors';
+import { supportsInputs } from './registry';
 import {
   type Executor,
   type ExecutionContext,
@@ -9,21 +10,22 @@ import {
   type TransformationDefinition,
 } from './types';
 export async function executeTransformation(
-  object: TransformObject,
+  input: TransformObject | readonly TransformObject[],
   operation: TransformationDefinition,
   parameters: Parameters,
   executors: Executor[],
   context?: ExecutionContext,
 ): Promise<{ objects: TransformObject[]; operation: OperationRecord }> {
-  if (!operation.accepts.includes(object.mimeType))
+  const objects = Array.isArray(input) ? [...input] : [input as TransformObject];
+  if (!supportsInputs(operation, objects))
     throw new TransformError(
       'INCOMPATIBLE_INPUT',
-      'This operation does not support the selected object.',
+      'This operation does not support the selected objects or input count.',
     );
   let snapshot: Parameters;
   try {
     snapshot = structuredClone(parameters);
-    operation.validate(snapshot, object);
+    operation.validate(snapshot, objects);
   } catch (error) {
     throw new TransformError(
       'INVALID_PARAMETERS',
@@ -37,9 +39,9 @@ export async function executeTransformation(
       'EXECUTOR_UNAVAILABLE',
       'This processing capability is not available yet.',
     );
-  let output: TransformObject;
+  let outputs: TransformObject[];
   try {
-    output = await executor.execute(object, operation, structuredClone(snapshot), context);
+    outputs = await executor.execute(objects, operation, structuredClone(snapshot), context);
   } catch (error) {
     throw new TransformError(
       'EXECUTION_FAILED',
@@ -47,19 +49,31 @@ export async function executeTransformation(
       error,
     );
   }
-  if (!operation.produces.includes(output.mimeType))
+  const inputIds = new Set(objects.map((o) => o.id));
+  if (
+    !Array.isArray(outputs) ||
+    outputs.length < operation.outputs.min ||
+    outputs.length > operation.outputs.max ||
+    new Set(outputs.map((o) => o?.id)).size !== outputs.length ||
+    Array.from(outputs).some(
+      (o) =>
+        !o ||
+        typeof o.id !== 'string' ||
+        !o.id ||
+        inputIds.has(o.id) ||
+        !operation.produces.includes(o.mimeType),
+    )
+  )
     throw new TransformError(
       'INVALID_OUTPUT',
-      'The executor returned an unsupported output format.',
+      'The executor must return valid new objects with unique identities, supported output formats and the declared output count.',
     );
-  if (!output.id || output.id === object.id)
-    throw new TransformError('INVALID_OUTPUT', 'The executor must create a new output object.');
   return {
-    objects: [output],
+    objects: outputs,
     operation: {
       id: crypto.randomUUID(),
-      inputIds: [object.id],
-      outputIds: [output.id],
+      inputIds: objects.map((o) => o.id),
+      outputIds: outputs.map((o) => o.id),
       transformationId: operation.id,
       version: operation.version,
       parameters: snapshot,
@@ -71,6 +85,23 @@ export function appendResult(
   session: Session,
   result: { objects: TransformObject[]; operation: OperationRecord },
 ): Session {
+  const known = new Set(session.objects.map((o) => o.id));
+  const ids = result.objects.map((o) => o.id);
+  if (
+    !ids.length ||
+    new Set(ids).size !== ids.length ||
+    ids.some((id) => known.has(id)) ||
+    !result.operation.inputIds.length ||
+    new Set(result.operation.inputIds).size !== result.operation.inputIds.length ||
+    result.operation.inputIds.some((id) => !known.has(id)) ||
+    result.operation.outputIds.length !== ids.length ||
+    result.operation.outputIds.some((id, i) => id !== ids[i]) ||
+    session.operations.some((op) => op.id === result.operation.id)
+  )
+    throw new TransformError(
+      'INVALID_OUTPUT',
+      'Cannot add incomplete or conflicting transformation results to history.',
+    );
   return {
     ...session,
     objects: [...session.objects, ...result.objects],
