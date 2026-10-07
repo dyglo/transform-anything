@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import {
   ArrowLeft,
@@ -19,6 +19,8 @@ import {
   LockKeyhole,
   Eraser,
   Pencil,
+  Square,
+  Layers,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Brand } from '../ui/Brand';
@@ -27,11 +29,15 @@ import { Properties } from '../ui/Properties';
 import { CropOverlay } from '../ui/CropOverlay';
 import { useObjectUrl } from '../ui/useObjectUrl';
 import { useWorkspace } from '../state/workspace';
-import { compatible, registry } from '../core/registry';
+import { compatible, registry, supportsInputs } from '../core/registry';
 import { copyObject, downloadObject } from '../core/export';
 import type { OperationId, Parameters, TransformObject } from '../core/types';
+import { CompositionProperties } from '../ui/CompositionProperties';
+import { useCompositionPreview } from '../ui/useCompositionPreview';
 const AnnotationEditor = lazy(() => import('../ui/AnnotationEditor'));
 const icons = {
+  frame: Square,
+  combine: Layers,
   annotate: Pencil,
   crop: Crop,
   resize: Maximize,
@@ -41,6 +47,8 @@ const icons = {
   'remove-bg': Eraser,
 };
 const descriptions = {
+  frame: 'Padding, borders and backgrounds',
+  combine: 'Bring images together',
   annotate: 'Labels, arrows and highlights',
   crop: 'Keep what matters',
   resize: 'Find the right size',
@@ -111,22 +119,56 @@ export default function Workspace() {
   const [operationId, setOperationId] = useState<OperationId>('resize');
   const operation = registry.find((o) => o.id === operationId)!;
   const [parameters, setParameters] = useState<Parameters>({});
+  const [inputIds, setInputIds] = useState<string[]>([]);
+  const composition = operationId === 'frame' || operationId === 'combine';
+  const available = useMemo(
+    () =>
+      session.objects.filter(
+        (o) => operationId !== 'combine' || operation.accepts.includes(o.mimeType),
+      ),
+    [session.objects, operation, operationId],
+  );
+  const operationInputs = useMemo(
+    () =>
+      operationId === 'combine'
+        ? inputIds.flatMap((id) => {
+            const o = session.objects.find((o) => o.id === id);
+            return o ? [o] : [];
+          })
+        : active
+          ? [active]
+          : [],
+    [operationId, inputIds, session.objects, active],
+  );
+  const draft = useCompositionPreview(operationInputs, operation, parameters, composition);
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [fit, setFit] = useState(true);
   const [editorStarted, setEditorStarted] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const previewImage = useRef<HTMLImageElement>(null);
-  // A new active node is a new parameter context, including when branching.
+  const parameterContext = useRef<{ operationId: OperationId; sessionId: string } | null>(null);
+  // Single-input tools follow the active node; Combine owns a session-scoped draft.
   useEffect(() => {
     if (active) {
+      const previous = parameterContext.current;
+      parameterContext.current = { operationId, sessionId: session.id };
+      if (
+        operationId === 'combine' &&
+        previous?.operationId === 'combine' &&
+        previous.sessionId === session.id
+      )
+        return;
       const op =
-        compatible(active).find((o) => o.id === operationId) ??
+        (operationId === 'combine'
+          ? registry.find((o) => o.id === 'combine')
+          : compatible(active).find((o) => o.id === operationId)) ??
         registry.find((o) => o.id === 'resize')!;
       if (op.id !== operationId) setOperationId(op.id);
       setParameters(op.defaults([active]));
+      if (op.id === 'combine' && previous?.sessionId !== session.id) setInputIds([active.id]);
     }
-  }, [active, operationId]);
+  }, [active, operationId, session.id]);
   useEffect(() => {
     const handler = (e: ClipboardEvent) => {
       if (e.target instanceof Element && e.target.closest('input,textarea,[contenteditable]'))
@@ -200,14 +242,14 @@ export default function Workspace() {
             <>
               <button
                 className="button button-light copy-button"
-                disabled={disabled}
+                disabled={disabled || composition}
                 onClick={() => void exportImage(true)}
               >
                 {copied ? <Check size={15} /> : <Copy size={15} />} {copied ? 'Copied' : 'Copy'}
               </button>
               <button
                 className="button"
-                disabled={disabled}
+                disabled={disabled || composition}
                 onClick={() => void exportImage(false)}
               >
                 <Download size={15} /> Download
@@ -256,28 +298,41 @@ export default function Workspace() {
             <aside className="transform-sidebar">
               <span className="panel-label">TRANSFORM</span>
               <div className="operation-list">
-                {compatible(active).map((op) => {
-                  const Icon = icons[op.id];
-                  return (
-                    <button
-                      key={op.id}
-                      className={`operation-button ${operationId === op.id ? 'selected' : ''}`}
-                      onClick={() => {
-                        setOperationId(op.id);
-                        if (op.id === 'annotate') setEditorStarted(true);
-                      }}
-                      disabled={disabled}
-                      aria-pressed={operationId === op.id}
-                    >
-                      <Icon size={18} />
-                      <span>
-                        {op.name}
-                        <small>{descriptions[op.id]}</small>
-                      </span>
-                      <ChevronRight size={14} />
-                    </button>
-                  );
-                })}
+                {registry
+                  .filter(
+                    (op) =>
+                      supportsInputs(op, [active]) ||
+                      (op.inputs.min > 1 &&
+                        supportsInputs(
+                          op,
+                          session.objects
+                            .filter((o) => op.accepts.includes(o.mimeType))
+                            .slice(0, op.inputs.min),
+                        )),
+                  )
+                  .map((op) => {
+                    const Icon = icons[op.id];
+                    return (
+                      <button
+                        key={op.id}
+                        className={`operation-button ${operationId === op.id ? 'selected' : ''}`}
+                        onClick={() => {
+                          setOperationId(op.id);
+                          if (op.id === 'combine') setInputIds([active.id]);
+                          if (op.id === 'annotate') setEditorStarted(true);
+                        }}
+                        disabled={disabled}
+                        aria-pressed={operationId === op.id}
+                      >
+                        <Icon size={18} />
+                        <span>
+                          {op.name}
+                          <small>{descriptions[op.id]}</small>
+                        </span>
+                        <ChevronRight size={14} />
+                      </button>
+                    );
+                  })}
               </div>
               <div className="sidebar-bottom">
                 <GitBranch size={18} />
@@ -289,16 +344,46 @@ export default function Workspace() {
             </aside>
             <section className="preview-panel" aria-label="Image preview">
               <div className="preview-info">
-                <span className="filename">{active.name}</span>
+                <span className="filename">
+                  {composition ? `${operation.name} draft` : active.name}
+                </span>
                 <span>
-                  {active.metadata.width} × {active.metadata.height}
-                  <span className="info-dot">·</span>
-                  {bytes(active.size)}
-                  <span className="format-tag">{active.mimeType.split('/')[1].toUpperCase()}</span>
+                  {composition ? (
+                    <>
+                      {draft.width ?? '—'} × {draft.height ?? '—'}
+                      <span className="info-dot">·</span>
+                      {operationInputs.length} {operationInputs.length === 1 ? 'image' : 'images'}
+                      <span className="format-tag">PNG</span>
+                    </>
+                  ) : (
+                    <>
+                      {active.metadata.width} × {active.metadata.height}
+                      <span className="info-dot">·</span>
+                      {bytes(active.size)}
+                      <span className="format-tag">
+                        {active.mimeType.split('/')[1].toUpperCase()}
+                      </span>
+                    </>
+                  )}
                 </span>
               </div>
               <div className={`preview-canvas ${fit ? '' : 'actual-size'}`} aria-busy={busy}>
-                {url ? (
+                {composition ? (
+                  draft.url ? (
+                    <div className="image-wrapper">
+                      <img
+                        src={draft.url}
+                        alt="Composition draft preview"
+                        className="preview-image"
+                        draggable={false}
+                      />
+                    </div>
+                  ) : (
+                    <p role="status">
+                      {draft.pending ? 'Preparing composition preview…' : draft.error}
+                    </p>
+                  )
+                ) : url ? (
                   <div className="image-wrapper">
                     <img
                       ref={previewImage}
@@ -334,7 +419,8 @@ export default function Workspace() {
               </div>
               <div className="preview-footer">
                 <span>
-                  <span className="status-dot" /> Original preserved
+                  <span className="status-dot" />{' '}
+                  {composition ? 'Draft preview · Apply to create an image' : 'Original preserved'}
                 </span>
                 <button onClick={() => setFit(!fit)} aria-pressed={fit}>
                   <Maximize size={13} />
@@ -361,7 +447,33 @@ export default function Workspace() {
                 />
               </Suspense>
             ) : null}
-            {operationId !== 'annotate' ? (
+            {composition ? (
+              <CompositionProperties
+                available={available}
+                inputs={operationInputs}
+                frame={operationId === 'frame'}
+                p={parameters}
+                setParameters={setParameters}
+                setIds={setInputIds}
+                busy={disabled}
+                pending={draft.pending}
+                previewError={draft.error}
+                onCancel={() => setOperationId('resize')}
+                onApply={() => {
+                  void (async () => {
+                    if (
+                      await apply(
+                        operation,
+                        parameters,
+                        operationInputs.map((o) => o.id),
+                      )
+                    )
+                      setOperationId('resize');
+                  })();
+                }}
+              />
+            ) : null}
+            {operationId !== 'annotate' && !composition ? (
               <Properties
                 object={active}
                 operation={operation}
@@ -384,7 +496,7 @@ export default function Workspace() {
               {session.objects.map((object, index) => {
                 const record = session.operations.find((op) => op.outputIds.includes(object.id));
                 const parent = record
-                  ? `From step ${session.objects.findIndex((o) => o.id === record.inputIds[0]) + 1}`
+                  ? `From ${record.inputIds.length === 1 ? 'step' : 'steps'} ${record.inputIds.map((id) => session.objects.findIndex((o) => o.id === id) + 1).join(', ')}`
                   : 'Root image';
                 return (
                   <HistoryNode

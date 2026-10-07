@@ -30,7 +30,7 @@ const families = [
   },
   {
     name: 'Screenshot Studio',
-    desc: 'Annotate, blur and redact screenshots. Frames and combining planned.',
+    desc: 'Annotate, blur, redact, frame and combine screenshots.',
     icon: Scan,
     live: true,
     partial: true,
@@ -231,7 +231,7 @@ export default function Landing() {
             <span className="eyebrow">A WORKSPACE WITH ROOM TO GROW</span>
             <h2>Different inputs. Same possibilities.</h2>
             <p>
-              Image Prep and Screenshot Studio annotations are ready. More tools are on the roadmap.
+              Image Prep and Screenshot Studio editing are ready. More tools are on the roadmap.
             </p>
           </div>
           <div className="family-grid">

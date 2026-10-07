@@ -5,6 +5,7 @@ import {
   type TransformObject,
   type TransformationDefinition,
 } from './types';
+import { compositionDefaults, compositionPlan } from './composition';
 import { validateAnnotations } from './annotations';
 function integer(p: Parameters, key: string, min = 1) {
   const n = Number(p[key]);
@@ -100,6 +101,30 @@ export const registry: TransformationDefinition[] = [
     capabilities: { batch: false, preview: true, nonDestructive: true },
     defaults: () => ({ annotations: { version: 2, elements: [] } }),
     validate: (p, [o]) => validateAnnotations(p.annotations, o),
+  },
+  {
+    ...common,
+    id: 'frame',
+    name: 'Frame',
+    family: 'Screenshot Studio',
+    produces: ['image/png'],
+    defaults: (objects) => compositionDefaults(objects, true),
+    validate: (p, objects) => {
+      compositionPlan(objects, p, true);
+    },
+  },
+  {
+    ...common,
+    id: 'combine',
+    name: 'Combine',
+    family: 'Screenshot Studio',
+    produces: ['image/png'],
+    inputs: { min: 2, max: 8 },
+    capabilities: { batch: false, preview: true, nonDestructive: true },
+    defaults: (objects) => compositionDefaults(objects),
+    validate: (p, objects) => {
+      compositionPlan(objects, p);
+    },
   },
 ];
 export function compatible(object: TransformObject) {

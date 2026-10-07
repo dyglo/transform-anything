@@ -19,3 +19,7 @@ Busy controls prevent duplicate work. Processing failures preserve selected obje
 Use the same source-pixel renderer for preview and committed PNG. DOM controls sit above Canvas for accessible selection, movement and resizing. Drafts are tab-local; pending work warns before reload. Export always uses committed active-object bytes, never unapplied preview.
 
 Redaction must have an explicit original-retention disclosure. Blur is cosmetic and must never be described as secure redaction. Opaque masks have fixed opacity; transparency is preserved outside the covered region.
+
+## SS-03 composition interaction
+
+Frame and Combine reuse the workspace panels and field/button styles. Combine offers labeled source checkboxes with thumbnails, a numbered ordered list and 44px earlier/later buttons. Native direction/sizing/alignment/background controls support keyboard and mobile touch. Source selection is independent of the active history image; multiple parent steps appear in history. Full-resolution preview identifies itself as a draft and shows resulting dimensions. Apply creates a PNG; Cancel leaves the graph untouched. Export is unavailable while editing a composition draft. No graph-editor interaction is exposed.

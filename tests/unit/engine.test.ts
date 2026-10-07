@@ -63,6 +63,7 @@ describe('shared transformation engine', () => {
       'convert',
       'remove-bg',
       'annotate',
+      'frame',
     ]);
     expect(compatible({ ...original, mimeType: 'image/jpeg' }).map((o) => o.id)).toContain(
       'compress',

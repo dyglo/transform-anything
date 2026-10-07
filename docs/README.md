@@ -1,6 +1,6 @@
 # Transform development documentation
 
-Updated: 7 October 2026. Foundation, core Image Prep, SS-01 annotations and SS-02 blur/opaque redaction are verified. The next task is **SS-03: frame/padding/combine and true multi-input execution**.
+Updated: 7 October 2026. Foundation, core Image Prep, SS-01 annotations, SS-02 blur/opaque redaction and SS-03 frames/padding/backgrounds/combine are verified. Shared multi-input/output execution is real. The next task is **DC-01: the first local Document/PDF vertical slice**.
 
 ## Reading order
 
