@@ -1,45 +1,30 @@
-# Next task — SS-01: Screenshot Studio annotations
+# Next task — SS-03: frame/background/padding and combine images
 
-Status: **TODO**. Prepared 6 October 2026. Dependencies: F-01–03 and IP-01 are done. This brief is a proposed next implementation; it does not start application work or authorize later milestones.
+Status: **TODO**. Prepared 7 October 2026. Dependencies: F-01–03, IP-01, SS-01 and SS-02 are verified. The current task completes at this handoff; this brief defines the next local vertical slice.
 
 ## User outcome
 
-Paste or import a screenshot, draw an arrow, add a text label, outline a region, and highlight an area. Apply the annotation as a new graph output, then crop/resize/convert/copy/download without re-uploading. Select the original or an earlier image to make a different branch.
+Import one or more screenshots, add a background/padding/frame or combine selected images in a horizontal/vertical arrangement, apply to a new image, then annotate/redact/resize/convert/export without re-uploading. Every original remains a graph root and the composition references every input.
 
-## Scope
+## Scope and entry points
 
-- Add an **Annotate** operation for PNG/JPEG/WebP in the shared workspace/registry. This starts Screenshot Studio; it does not complete the whole family.
-- Provide text, arrow, rectangle outline, and translucent rectangular highlight tools. Useful initial controls: stroke/fill color, stroke width, text size and content, and highlight opacity.
-- Keep a draft layer over the active image. Select, move, resize, delete and undo/redo draft elements. Apply commits one operation; cancel discards the draft. Distinguish draft undo from selecting existing graph outputs.
-- Use source-image coordinates, including text/style sizing, independent of display scale. Keep interaction working on scaled portraits, landscape images, and mobile touch. Expose keyboard-accessible element selection/properties and delete/nudge actions.
-- Render a PNG at the original dimensions with alpha preserved. Rasterize annotations into output pixels. A later transformation sees that normal output object. Persist the operation parameters so its provenance survives refresh; do not promise in-place editing of already applied annotations in this task.
-- Keep processing local, with a visible busy/error state and no image-byte network transfer. Preserve source and active selection when execution fails.
-
-Blur/redaction, freehand drawing, frames, combining images, compare, templates, cloud capture, recipes, and batch controls are separate tasks. Do not add them to SS-01 implicitly.
-
-## Engineering entry points
-
-Read `src/core/types.ts`, `registry.ts`, `engine.ts`, `src/executors/local.ts`, `render.ts`, `src/state/workspace.ts`, `src/pages/Workspace.tsx`, `src/ui/Properties.tsx`, `CropOverlay.tsx`, and `src/storage/objects.ts` before designing changes.
-
-Current `Parameters` accepts only primitive values; annotation elements need typed structured data. Extend the parameter model and per-operation validation deliberately, with versioned serializable element schemas. Avoid unvalidated JSON strings merely to fit the current type. Keep existing persisted image operations compatible; handle invalid or unsupported annotation schemas explicitly. Do not restructure the full repo or introduce a backend.
-
-Evaluate Konva, Fabric.js, or a small overlay approach against selection/resize/text/undo requirements, bundle size, license, rendering consistency, and accessible controls. Record the chosen approach and reason in `ARCHITECTURE.md`. Lazy-load editor code where practical. If drawing occurs through a library, ensure export/worker fonts and render coordinates match the preview. A documented main-thread render path is acceptable where worker text/rendering support requires it.
-
-The registry must declare compatibility, parameters, output MIME, execution and capabilities. Do not advertise batch support until the operation's parameter behavior and batch execution exist. Keep live preview outside graph commits, and ensure switching active objects or tools handles unsaved drafts predictably without silently applying them.
+1. Read core/types.ts, registry.ts, engine.ts, executors/local.ts, state/workspace.ts, storage/objects.ts and Workspace.tsx. Graph operations have input/output arrays, but the engine/executor accept exactly one image. Extend actual contracts deliberately; do not treat arrays as already functional multi-input support.
+2. Introduce validated required input counts/types and selection-based capability resolution. Adapt existing single-image operations without regressions. Immutable parameter snapshots, typed failures and graph atomicity must remain intact. A composition creates one new PNG; PDF-style multi-output stays later.
+3. Add a shared composition renderer for background color/transparent padding, optional rounded/frame styling, horizontal and vertical combining with gap/alignment and explicit unequal-size fit rules. Bound all outputs by existing dimension/pixel budgets before allocation. Preserve alpha where intended; no silent stretching or cropping.
+4. Reuse the workspace preview/parameters/history/export and shared registry/executor path. Accessible multi-input selection must clearly distinguish active preview from inputs used in an operation. Draft changes never commit; Apply creates the complete graph output; Cancel/failure retains sources and active selection.
+5. Keep all processing local. No resource deployment, API, new cloud bindings, accounts or remote template assets are needed. Compare/Mockup can reuse the resulting multi-input/composition foundation later; do not claim those families complete.
 
 ## Acceptance checks
 
-1. Import a screenshot → add all four element types → edit/move/resize/delete → draft undo/redo → apply. Exactly one new output becomes selected, with correct original dimensions, visible annotations and retained original.
-2. Select the original → make a different annotation → apply. Both branches and all intermediate objects remain available.
-3. Annotated output → resize → WebP → download; supported clipboard copy works or reports browser restrictions. Refresh recovers output bytes, graph relationships, and valid operation parameters.
-4. Cancel creates no node. Switching active images/tools handles drafts as designed. Invalid coordinates/styles/text bounds/schema or rendering failure preserve active object/history and show an actionable error.
-5. Verify source/display coordinate mapping on scaled portrait/landscape and at 390px mobile width. Mouse and touch placement/selection work. Keyboard can select, change properties, nudge and delete; focus and control labels remain usable.
-6. Check transparent PNG compositing and text rendering, long/empty labels, zero-size elements, edge placements, color/opacity limits and malformed stored parameters. Screenshot comparison should confirm preview/output agreement; use pixel-level checks for deterministic shapes where meaningful.
-7. Confirm no image bytes or annotation content are sent over the network. Clean up preview URLs and any editor workers/listeners; storage failures must remain visible.
-8. Run formatting, typecheck, focused geometry/schema/render tests, production build, and relevant browser regressions including crop/Remove BG. Record actual outcomes, not assumed passing results.
+- Single screenshot → padded/background/framed PNG → redact → resize → WebP → download, with exact dimensions/alpha/preview agreement and retained source.
+- Two different-size images → horizontal and vertical composition → new PNG references both source IDs → crop/annotation/export without re-uploading.
+- Single-image existing transformations retain contracts and pass all previous chains. Multi-input incompatible MIME/count/missing bytes/oversize allocation/encoding failure leave graph unchanged with clear errors.
+- Both source branches remain selectable. Refresh recovers composition bytes and multi-input relationships. Clear/expiry removes graph and bytes; storage/quota failures remain visible.
+- Mouse, touch and keyboard input selection/parameters at desktop and 390px mobile width. No horizontal page overflow or hidden required controls. Output contains only composed pixels.
+- Validate all bounds and preview/export agreement with pixel checks, including transparent PNG, uneven dimensions, gaps/alignment, edge placement and rounded/frame behavior.
+- No user bytes or content sent over the network. Clean up image bitmaps, preview URLs/listeners/workers.
+- Run Prettier, ESLint, typecheck, unit/integration tests, browser regressions and production build. Run browser tests with stable sources; do not trigger builds mid-run.
 
-## Completion handoff
+## Completion and handoff
 
-Mark SS-01 `IN PROGRESS` when implementation starts within an authorized request. Mark `DONE` only after the above checks pass; record completion evidence in `DEVELOPMENT_TRACKER.md` and `IMPLEMENTATION_STATUS.md`. Update product/UI availability to show Screenshot Studio as partially available. Document schema/render/storage/privacy changes as needed.
-
-Replace this brief with **SS-02: region blur and opaque redaction** once SS-01 is complete. That task must explicitly distinguish cosmetic blur from irreversible pixel overwrite in the exported output, and disclose that Transform retains the original input until session cleanup.
+Mark SS-03 IN PROGRESS before behavior edits. Record actual verification before DONE. Update catalog/product/architecture/privacy/status/roadmap and AGENTS.md as contracts change. Replace this brief with CP-01 Compare once the multi-input composition slice passes. Keep all ten families represented and claims limited to real processing.

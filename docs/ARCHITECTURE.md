@@ -37,3 +37,37 @@ Evaluated [Konva](https://konvajs.org/docs/index.html) and [Fabric](https://fabr
 `AnnotationEditor` is React-lazy loaded on first Annotate use. Draft snapshots are keyed by source ID inside the mounted editor and capped to 50 undo steps. Pointer capture groups each gesture into one undo step; cancellation restores its starting state. ResizeObserver and image-load listeners synchronize source/display scale and are removed on cleanup. Draft warning is portaled into the preview, so switching tools preserves the workspace grid.
 
 The preview transparent layer and PNG export use `drawAnnotations` with identical source pixels, clipping, text wrapping and system font. Export is deliberately main-thread Canvas to use the same browser font environment; no worker or image network request is introduced. Bitmaps close in finally blocks. The small renderer is dynamically imported by the local executor; existing image/background workers remain unchanged. Metadata/bytes stay separate. Structured operation parameters are deep-cloned at commit.
+
+## SS-02 processing and schema decision
+
+Extend the existing annotation workflow rather than creating a separate upload/editor/export app. Operation and document version 2 introduce blur and redact elements; version 1 documents remain valid with their original four kinds. Recovery validates historical record version 1 with document version 1 and record version 2 with document version 1 or 2, reports malformed provenance, and never automatically replays recovered operations. IndexedDB version and historical primitive operation shapes remain unchanged.
+
+Blur uses a deterministic separable box filter with premultiplied RGB and clamped region edges, avoiding browser-specific Canvas filter support and hidden transparent RGB bleed. Radius is 1–64 source pixels; all blur regions together are capped at 4 megapixels per operation to bound temporary memory. Rendering remains local on the main thread for agreement with existing text/Canvas output. Revisit worker preview/caching for larger compositions rather than silently increasing this budget.
+
+Redaction rounds selection edges outward to full pixels, clears and fills the entire region with opaque RGB/alpha. It is pixel overwrite in the output PNG; it does not delete the original graph node or original stored bytes. Region operations are applied in document order. Subsequent elements can add new pixels but cannot recover overwritten pixels. Blur is cosmetic. Neither feature promises PDF content redaction or original/session deletion.
+
+Preview now renders a complete source composite through the same renderer, temporarily hiding the underlying displayed image to avoid double-compositing semi-transparent pixels. Async decoding is cancelled on source/editor changes; cleanup restores source visibility. Invalid drafts show the source and an explicit preview error; engine validation rejects Apply before execution.
+
+## Cloudflare boundary matrix
+
+| Service             | Boundary / intended responsibility                                             | Current state                          | Prerequisite                                                                 |
+| ------------------- | ------------------------------------------------------------------------------ | -------------------------------------- | ---------------------------------------------------------------------------- |
+| Workers             | Static assets now; future validated API/orchestration behind executor contract | Local/staging/production configuration | Authentication and secure job slice before API consumers                     |
+| R2                  | `StorageReference.kind = r2`, replaceable byte resolver                        | Type only; resolver rejects cloud refs | Owned, expiring objects, access validation, lifecycle cleanup                |
+| D1                  | Persist necessary relational project/job metadata, separate from bytes         | Deferred                               | Concrete persistence need and migration design                               |
+| KV                  | Cache/config whose consistency tolerates KV semantics                          | Deferred                               | Concrete cache/config requirement                                            |
+| Queues              | Job transport behind cloud-job executor; idempotent consumers                  | Deferred                               | Job IDs, retry/cancel/failure contract and R2                                |
+| Workflows           | Durable remote execution sequence, separate from user graph                    | Deferred                               | Demonstrated long-running workflow                                           |
+| Durable Objects     | Strongly coordinated mutable state                                             | Deferred                               | Coordination requirement that simpler storage cannot meet                    |
+| Browser Run         | `browser-capture` executor for Web Capture                                     | Interface only                         | SSRF/subresource/redirect controls and resource budgets                      |
+| External processors | `external` executor and remote storage references                              | Interface only                         | Measured browser/Cloudflare incompatibility; privacy and lifecycle contracts |
+
+These interfaces do not imply resources were deployed. No credentials are configured in this cloud environment. Local processing needs none. Do not invent public endpoints or bind unused infrastructure.
+
+## Foundation hardening — 7 October 2026
+
+Input detection checks PNG/JPEG/WebP magic bytes before browser decoding, so a missing or incorrect browser MIME hint/extension cannot misclassify a real image. Decoding still verifies actual readability and dimensions; the byte Blob is normalized to detected MIME without rewriting original contents. Size limits run before reading headers.
+
+The engine takes a validated parameter snapshot before async execution and passes an independent copy to the executor. Caller/executor mutations cannot corrupt the recorded provenance. `TransformError` provides stable codes for compatibility, validation, unavailable executors, execution failure and invalid output, with user-facing messages and original causes. Output identity must differ from the source; the graph commits only after successful processing.
+
+ESLint now covers JavaScript/TypeScript errors and React hook ordering. TypeScript remains the strict type check; Prettier owns formatting. Playwright optionally selects an installed Chromium via an explicit executable-path variable when managed browser downloads are restricted.

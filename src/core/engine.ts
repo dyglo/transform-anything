@@ -1,3 +1,4 @@
+import { TransformError } from './errors';
 import {
   type Executor,
   type ExecutionContext,
@@ -15,13 +16,44 @@ export async function executeTransformation(
   context?: ExecutionContext,
 ): Promise<{ objects: TransformObject[]; operation: OperationRecord }> {
   if (!operation.accepts.includes(object.mimeType))
-    throw new Error('This operation does not support the selected object.');
-  operation.validate(parameters, object);
+    throw new TransformError(
+      'INCOMPATIBLE_INPUT',
+      'This operation does not support the selected object.',
+    );
+  let snapshot: Parameters;
+  try {
+    snapshot = structuredClone(parameters);
+    operation.validate(snapshot, object);
+  } catch (error) {
+    throw new TransformError(
+      'INVALID_PARAMETERS',
+      error instanceof Error ? error.message : 'Invalid transformation parameters.',
+      error,
+    );
+  }
   const executor = executors.find((e) => e.supports(operation.execution));
-  if (!executor) throw new Error('This processing capability is not available yet.');
-  const output = await executor.execute(object, operation, parameters, context);
+  if (!executor)
+    throw new TransformError(
+      'EXECUTOR_UNAVAILABLE',
+      'This processing capability is not available yet.',
+    );
+  let output: TransformObject;
+  try {
+    output = await executor.execute(object, operation, structuredClone(snapshot), context);
+  } catch (error) {
+    throw new TransformError(
+      'EXECUTION_FAILED',
+      error instanceof Error ? error.message : 'Processing failed.',
+      error,
+    );
+  }
   if (!operation.produces.includes(output.mimeType))
-    throw new Error('The executor returned an unsupported output format.');
+    throw new TransformError(
+      'INVALID_OUTPUT',
+      'The executor returned an unsupported output format.',
+    );
+  if (!output.id || output.id === object.id)
+    throw new TransformError('INVALID_OUTPUT', 'The executor must create a new output object.');
   return {
     objects: [output],
     operation: {
@@ -30,7 +62,7 @@ export async function executeTransformation(
       outputIds: [output.id],
       transformationId: operation.id,
       version: operation.version,
-      parameters: structuredClone(parameters),
+      parameters: snapshot,
       createdAt: Date.now(),
     },
   };

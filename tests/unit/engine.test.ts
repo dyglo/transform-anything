@@ -104,3 +104,35 @@ describe('shared transformation engine', () => {
     expect(session.operations).toEqual([]);
   });
 });
+
+it('takes the validated snapshot before asynchronous execution and protects provenance from executor mutation', async () => {
+  let release!: () => void;
+  const wait = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const parameters = { width: 10, height: 10 };
+  const pending = executeTransformation(original, resize, parameters, [
+    {
+      supports: () => true,
+      execute: async (_o, _op, p) => {
+        await wait;
+        p.width = 99;
+        return { ...original, id: 'snapshot-output' };
+      },
+    },
+  ]);
+  parameters.width = -1;
+  release();
+  const result = await pending;
+  expect(result.operation.parameters).toEqual({ width: 10, height: 10 });
+});
+it('returns typed errors and rejects destructive output identity', async () => {
+  await expect(
+    executeTransformation(original, resize, { width: 0, height: 10 }, []),
+  ).rejects.toMatchObject({ code: 'INVALID_PARAMETERS' });
+  await expect(
+    executeTransformation(original, resize, { width: 10, height: 10 }, [
+      { supports: () => true, execute: async () => original },
+    ]),
+  ).rejects.toMatchObject({ code: 'INVALID_OUTPUT' });
+});

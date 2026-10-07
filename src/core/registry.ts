@@ -91,11 +91,12 @@ export const registry: TransformationDefinition[] = [
   {
     ...common,
     id: 'annotate',
+    version: 2,
     name: 'Annotate',
     family: 'Screenshot Studio',
     produces: ['image/png'],
     capabilities: { batch: false, preview: true, nonDestructive: true },
-    defaults: () => ({ annotations: { version: 1, elements: [] } }),
+    defaults: () => ({ annotations: { version: 2, elements: [] } }),
     validate: (p, o) => validateAnnotations(p.annotations, o),
   },
 ];

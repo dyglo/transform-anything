@@ -56,7 +56,12 @@ export const useWorkspace = create<State>((set, get) => ({
             )) {
               try {
                 const input = session.objects.find((o) => o.id === record.inputIds[0]);
-                if (!input || record.version !== 1)
+                if (
+                  !input ||
+                  ![1, 2].includes(record.version) ||
+                  (record.version === 1 &&
+                    (record.parameters.annotations as { version?: number })?.version !== 1)
+                )
                   throw new Error('Unsupported annotation record.');
                 validateAnnotations(record.parameters.annotations, input);
               } catch {

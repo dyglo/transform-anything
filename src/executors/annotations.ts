@@ -1,10 +1,30 @@
 import type { AnnotationDocument } from '../core/types';
+import { boxBlur } from './regionPixels';
+import { pixelBounds } from '../core/regions';
+import { validateAnnotations } from '../core/annotations';
 
 // One source-pixel renderer for the transparent preview layer and committed PNG.
 export function drawAnnotations(ctx: CanvasRenderingContext2D, doc: AnnotationDocument) {
   for (const e of doc.elements) {
     ctx.save();
     try {
+      if (e.kind === 'redact' || e.kind === 'blur') {
+        const b = pixelBounds(e);
+        if (e.kind === 'redact') {
+          // Integer bounds and full opacity replace alpha and RGB, including
+          // fractional edges. No sensitive source pixel survives in this region.
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.fillStyle = e.color;
+          ctx.clearRect(b.x, b.y, b.width, b.height);
+          ctx.fillRect(b.x, b.y, b.width, b.height);
+        } else {
+          const pixels = ctx.getImageData(b.x, b.y, b.width, b.height);
+          pixels.data.set(boxBlur(pixels.data, b.width, b.height, e.blurRadius!));
+          ctx.putImageData(pixels, b.x, b.y);
+        }
+        continue;
+      }
       ctx.globalAlpha = e.opacity;
       ctx.strokeStyle = ctx.fillStyle = e.color;
       ctx.lineWidth = e.stroke;
@@ -71,6 +91,9 @@ export async function renderAnnotations(blob: Blob, doc: AnnotationDocument) {
       width: bitmap.width,
       height: bitmap.height,
     });
+    validateAnnotations(doc, {
+      metadata: { width: bitmap.width, height: bitmap.height },
+    } as Parameters<typeof validateAnnotations>[1]);
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Could not create the annotation canvas. Try a smaller image.');
     ctx.drawImage(bitmap, 0, 0);

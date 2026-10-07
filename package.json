@@ -15,7 +15,8 @@
     "build:staging": "tsc -b && vite build --mode staging",
     "build:production": "tsc -b && vite build --mode production",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -30,16 +31,21 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "latest",
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.56.0",
     "@tailwindcss/vite": "^4.1.0",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "latest",
+    "eslint": "^10.12.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "fake-indexeddb": "^6.2.4",
+    "globals": "^17.13.0",
     "prettier": "^3.9.9",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.9.0",
+    "typescript-eslint": "^8.71.1",
     "vite": "latest",
     "vitest": "latest",
     "wrangler": "latest"

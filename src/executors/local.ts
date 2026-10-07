@@ -8,17 +8,23 @@ import {
   type AnnotationDocument,
 } from '../core/types';
 import { resolveBytes } from '../storage/objects';
+import { detectImageMime } from '../core/detection';
 import { renderImage, type RenderRequest, type RenderResult } from './render';
 export async function importImage(file: File): Promise<TransformObject> {
-  if (!IMAGE_MIMES.includes(file.type as ImageMime))
+  if (file.size > MAX_FILE_BYTES)
+    throw new Error(`${file.name}: images must be 25 MiB or smaller.`);
+  const mime = detectImageMime(new Uint8Array(await file.slice(0, 12).arrayBuffer()));
+  if (!mime) {
+    if (IMAGE_MIMES.includes(file.type as ImageMime))
+      throw new Error(`${file.name}: this image could not be read. It may be damaged.`);
     throw new Error(
       `${file.name}: this release supports PNG, JPEG, and WebP images. Other families are coming later.`,
     );
-  if (file.size > MAX_FILE_BYTES)
-    throw new Error(`${file.name}: images must be 25 MiB or smaller.`);
+  }
+  const bytes = file.slice(0, file.size, mime);
   let bitmap: ImageBitmap;
   try {
-    bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    bitmap = await createImageBitmap(bytes, { imageOrientation: 'from-image' });
   } catch {
     throw new Error(`${file.name}: this image could not be read. It may be damaged.`);
   }
@@ -31,12 +37,12 @@ export async function importImage(file: File): Promise<TransformObject> {
   return {
     id,
     type: 'image',
-    mimeType: file.type,
+    mimeType: mime,
     name: file.name,
     size: file.size,
     createdAt: Date.now(),
     metadata: { width, height },
-    storage: { kind: 'blob', blob: file },
+    storage: { kind: 'blob', blob: bytes },
     preview: { objectId: id },
   };
 }

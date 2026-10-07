@@ -1692,3 +1692,23 @@ html {
 .annotation-properties .field {
   margin: 10px 0;
 }
+
+.annotation-privacy {
+  margin: 12px 0;
+  padding: 12px;
+  border-left: 3px solid #6a7e63;
+  border-radius: 4px;
+  background: #f1f5ef;
+  color: #30402b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.annotation-numeric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 10px;
+}
+.annotation-numeric-grid .field:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}

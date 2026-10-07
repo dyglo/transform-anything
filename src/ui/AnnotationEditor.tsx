@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import type { AnnotationElement, AnnotationDocument, TransformObject } from '../core/types';
-import { adjustAnnotation } from '../core/annotations';
+import { adjustAnnotation, validateAnnotations } from '../core/annotations';
 import { drawAnnotations } from '../executors/annotations';
 
 type Draft = {
@@ -19,7 +19,7 @@ type Draft = {
   selected: string | null;
 };
 const empty = (): Draft => ({ elements: [], past: [], future: [], selected: null });
-const kinds = ['text', 'arrow', 'rectangle', 'highlight'] as const;
+const kinds = ['text', 'arrow', 'rectangle', 'highlight', 'blur', 'redact'] as const;
 export default function AnnotationEditor({
   object,
   image,
@@ -45,6 +45,7 @@ export default function AnnotationEditor({
     height: number;
   } | null>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const overlay = useRef<HTMLDivElement>(null);
   const gesture = useRef<{
     pointer: number;
@@ -98,13 +99,14 @@ export default function AnnotationEditor({
       y,
       width: Math.max(1, Math.min(width * 0.35, width - x)),
       height: Math.max(1, Math.min(height * 0.2, height - y)),
-      color: kind === 'highlight' ? '#ffd400' : '#e53935',
+      color: kind === 'redact' ? '#000000' : kind === 'highlight' ? '#ffd400' : '#e53935',
       stroke: 4,
       opacity: kind === 'highlight' ? 0.35 : 1,
       fontSize: Math.min(32, height),
       text: kind === 'text' ? 'Label' : '',
       flipX: false,
       flipY: false,
+      ...(kind === 'blur' ? { blurRadius: 12 } : {}),
     };
   }
   useEffect(() => {
@@ -137,12 +139,38 @@ export default function AnnotationEditor({
     };
   }, [image, visible, object.id]);
   useLayoutEffect(() => {
-    if (!visible || !canvas.current) return;
-    const ctx = canvas.current.getContext('2d');
-    if (!ctx) return;
-    ctx.clearRect(0, 0, width, height);
-    drawAnnotations(ctx, { version: 1, elements: draft.elements });
-  }, [draft.elements, visible, width, height, bounds]);
+    const img = image.current;
+    const surface = canvas.current;
+    if (!visible || !img || !surface) return;
+    let cancelled = false;
+    const render = async () => {
+      try {
+        await img.decode();
+        if (cancelled) return;
+        const ctx = surface.getContext('2d');
+        if (!ctx) throw new Error('Preview canvas is unavailable.');
+        // A complete composite is necessary for blur and pixel overwrite.
+        // Hide the source only after rendering; never double-composite alpha.
+        ctx.clearRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        const doc: AnnotationDocument = { version: 2, elements: draft.elements };
+        if (draft.elements.length) validateAnnotations(doc, object);
+        drawAnnotations(ctx, doc);
+        img.style.visibility = 'hidden';
+        setPreviewError(null);
+      } catch (error) {
+        if (cancelled) return;
+        img.style.visibility = '';
+        surface.getContext('2d')?.clearRect(0, 0, width, height);
+        setPreviewError(error instanceof Error ? error.message : 'Preview could not be drawn.');
+      }
+    };
+    void render();
+    return () => {
+      cancelled = true;
+      img.style.visibility = '';
+    };
+  }, [draft.elements, visible, width, height, bounds, image, object]);
   function point(event: PointerEvent) {
     const b = image.current!.getBoundingClientRect();
     return {
@@ -315,6 +343,16 @@ export default function AnnotationEditor({
           Draw on the image or add an element below. Changes stay in this tab until Apply. Arrow
           keys move/resize 1px; Shift moves 10px. Text wraps and clips to its box.
         </p>
+        <p className="annotation-privacy">
+          Blur is cosmetic, not secure redaction. Opaque redaction overwrites covered pixels in the
+          exported image. Your original and earlier images remain in local history; download the
+          redacted output and clear the session to remove them from this browser.
+        </p>
+        {previewError ? (
+          <p className="field-hint" role="status">
+            Preview unavailable: {previewError}
+          </p>
+        ) : null}
         {otherDrafts ? <p role="status">{otherDrafts} other image draft(s) retained.</p> : null}
         <fieldset disabled={disabled}>
           <label className="field">
@@ -381,42 +419,60 @@ export default function AnnotationEditor({
           </label>
           {selected ? (
             <>
-              {(['x', 'y', 'width', 'height', 'stroke', 'fontSize', 'opacity'] as const)
-                .filter((k) => k !== 'fontSize' || selected.kind === 'text')
-                .filter((k) => k !== 'stroke' || ['arrow', 'rectangle'].includes(selected.kind))
-                .map((k) => (
-                  <label className="field" key={k}>
-                    <span>
-                      {
+              <div className="annotation-numeric-grid">
+                {(
+                  [
+                    'x',
+                    'y',
+                    'width',
+                    'height',
+                    'stroke',
+                    'fontSize',
+                    'opacity',
+                    'blurRadius',
+                  ] as const
+                )
+                  .filter((k) => k !== 'blurRadius' || selected.kind === 'blur')
+                  .filter((k) => k !== 'opacity' || !['blur', 'redact'].includes(selected.kind))
+                  .filter((k) => k !== 'fontSize' || selected.kind === 'text')
+                  .filter((k) => k !== 'stroke' || ['arrow', 'rectangle'].includes(selected.kind))
+                  .map((k) => (
+                    <label className="field" key={k}>
+                      <span>
                         {
-                          x: 'Left',
-                          y: 'Top',
-                          width: 'Width',
-                          height: 'Height',
-                          stroke: 'Stroke width',
-                          fontSize: 'Text size',
-                          opacity: 'Opacity',
-                        }[k]
-                      }
-                    </span>
-                    <input
-                      aria-label={`Annotation ${k}`}
-                      type="number"
-                      step={k === 'opacity' ? '0.05' : '1'}
-                      value={selected[k]}
-                      onChange={(e) => edit({ [k]: Number(e.target.value) })}
-                    />
-                  </label>
-                ))}
-              <label className="field">
-                <span>Color</span>
-                <input
-                  aria-label="Annotation color"
-                  type="color"
-                  value={selected.color}
-                  onChange={(e) => edit({ color: e.target.value })}
-                />
-              </label>
+                          {
+                            x: 'Left',
+                            y: 'Top',
+                            width: 'Width',
+                            height: 'Height',
+                            stroke: 'Stroke width',
+                            fontSize: 'Text size',
+                            opacity: 'Opacity',
+                            blurRadius: 'Blur radius (source px)',
+                          }[k]
+                        }
+                      </span>
+                      <input
+                        aria-label={`Annotation ${k}`}
+                        type="number"
+                        step={k === 'opacity' ? '0.05' : '1'}
+                        value={selected[k] ?? ''}
+                        onChange={(e) => edit({ [k]: Number(e.target.value) })}
+                      />
+                    </label>
+                  ))}
+              </div>
+              {selected.kind !== 'blur' ? (
+                <label className="field">
+                  <span>Color</span>
+                  <input
+                    aria-label="Annotation color"
+                    type="color"
+                    value={selected.color}
+                    onChange={(e) => edit({ color: e.target.value })}
+                  />
+                </label>
+              ) : null}
               {selected.kind === 'text' ? (
                 <label className="field">
                   <span>Text content</span>
@@ -462,7 +518,7 @@ export default function AnnotationEditor({
             disabled={!draft.elements.length}
             onClick={async () => {
               const id = object.id;
-              if (await onApply({ version: 1, elements: draft.elements }))
+              if (await onApply({ version: 2, elements: draft.elements }))
                 update(() => empty(), id);
             }}
           >

@@ -30,7 +30,7 @@ const families = [
   },
   {
     name: 'Screenshot Studio',
-    desc: 'Text, arrows, outlines and highlights. Blur and frames planned.',
+    desc: 'Annotate, blur and redact screenshots. Frames and combining planned.',
     icon: Scan,
     live: true,
     partial: true,
