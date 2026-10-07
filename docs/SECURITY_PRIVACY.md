@@ -19,3 +19,9 @@ Opaque redaction writes full-opacity replacement pixels into the output PNG. Fra
 Original and intermediate objects deliberately remain selectable and stored under the same 24-hour anonymous session policy. Visible editor copy instructs users to download the redacted output and clear the session to remove originals from this browser. Clear failures remain visible. Expiry is lazy, and downloaded originals/backups/browser-managed data are outside app deletion guarantees. No history or original is bundled with downloads.
 
 Blur is cosmetic and must not be used as secure redaction. Blur parameters contain geometry/radius, not extracted content. Processing/drafts/provenance stay local. Version and memory-budget validation apply before processing; temporary pixel buffers become collectible after rendering. Transparency outside selected regions remains unchanged.
+
+## SS-03 frames and compositions
+
+Every source and output stays local. Frame/Combine introduce no asset download or upload, remote URL, account or cloud binding. Selected source total and final output are separately bounded to 40 megapixels / 16,384px sides, with 2–8 unique composition inputs. Decoding is sequential and bitmaps/canvas memory are released on success/failure. As with other browser codecs, this is not a hardened untrusted-code sandbox. Full-resolution composition rendering uses main-thread Canvas.
+
+Previews are transient, debounced and cancelled when selection/settings change; their PNG URLs are revoked and they do not save graph/bytes. Apply records all ordered source IDs and immutable settings under the existing 24-hour session policy. Outputs contain only composited raster pixels; downloads do not bundle sources or history. Original and intermediate bytes deliberately remain selectable until clear/expiry. Storage failure preserves usable in-memory output and the visible download-before-leaving warning.

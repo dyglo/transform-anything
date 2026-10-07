@@ -6,15 +6,17 @@ Updated: 7 October 2026. [DEVELOPMENT_TRACKER.md](DEVELOPMENT_TRACKER.md) owns t
 
 Shared object/storage model, registry/validation, local executor, branching operation graph, reference hero, accessible responsive workspace, image input/export, 24-hour local recovery and Cloudflare configuration. Crop/resize/rotate/conversion/quality, manual crop handles, and Remove BG are delivered. Metadata tools and further background controls remain IP-04; all image features are not claimed complete.
 
-## 2. Visual workflows — next
+## 2. Screenshot Studio foundation — delivered; other visual families remain planned
 
-**SS-01 annotations and SS-02 blur/opaque redaction are tested**, with a lazy Canvas/DOM editor and shared raster output. Next is **SS-03 frames/combine and multi-input execution**, then CP-01 Compare and MK-01 Mockup. The SS-01 library evaluation and renderer decision are recorded in ARCHITECTURE.md.
+**SS-01 annotations and SS-02 blur/opaque redaction are tested**, with a lazy Canvas/DOM editor and shared raster output. **SS-03 frames/padding/backgrounds/combine and true multi-input/output contracts are delivered.** CP-01 Compare and MK-01 Mockup remain planned and can reuse this foundation. The SS-01 library evaluation and renderer decision are recorded in ARCHITECTURE.md.
 
 Introduce IN-01 typed text/data input before SC-01 ShareCard and TV-01 Text → Visual. This exposes their dependency explicitly rather than building a separate text upload pipeline. URL-based cards remain a later cloud-capable task.
 
-## 3. Local formats and reusable workflows
+## 3. First different-family milestone — next: DC-01 Document/PDF
 
-DC-01 local PDF merge/split/reorder/extract/page images, including true multi-output execution. DV-01 data cleaning/charts/tables; FT-01 explicit browser-supported conversions beyond current images. BT-01 real bulk controls/ZIP export and RC-01 personal local recipes. IP-04 additional image metadata/background tools. Each capability is independently validated; libraries and format support are chosen at implementation time.
+**DC-01 is the exact next task:** local PDF detection/import/preview, merge/split/reorder/extract/page images, proving real multi-output transformations using the shared contract. Priority changed on 7 October 2026 at the user’s explicit request to prove a different input family after SS-03 instead of expanding Screenshot Studio indefinitely. This moves DC-01 ahead of CP-01/MK-01; stable task IDs and all ten families remain intact. No PDF implementation is included in SS-03.
+
+After that slice, continue CP-01/MK-01 and the remaining local milestones. DV-01 data cleaning/charts/tables; FT-01 explicit browser-supported conversions beyond current images. BT-01 real bulk controls/ZIP export and RC-01 personal local recipes. IP-04 additional image metadata/background tools. Each capability is independently validated; libraries and format support are chosen at implementation time.
 
 ## 4. Secure cloud slice
 

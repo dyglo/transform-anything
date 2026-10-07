@@ -1,30 +1,30 @@
-# Next task — SS-03: frame/background/padding and combine images
+# Next task — DC-01: first local Document/PDF vertical slice
 
-Status: **TODO**. Prepared 7 October 2026. Dependencies: F-01–03, IP-01, SS-01 and SS-02 are verified. The current task completes at this handoff; this brief defines the next local vertical slice.
+Status: **TODO**. Prepared 7 October 2026 after SS-03. Dependencies: F-01–03 and SS-03. Shared ordered multi-input/output execution, atomic graph/storage commits and composition are ready. The user explicitly prioritized proving a different family after SS-03; DC-01 moves ahead of CP-01/MK-01. Do not begin another long Screenshot Studio expansion first.
 
 ## User outcome
 
-Import one or more screenshots, add a background/padding/frame or combine selected images in a horizontal/vertical arrangement, apply to a new image, then annotate/redact/resize/convert/export without re-uploading. Every original remains a graph root and the composition references every input.
+Import PDFs into the same input-first workspace, inspect pages, merge ordered documents, reorder/extract pages, split into reusable PDF objects and render selected pages into PNG objects that can enter Frame/Annotate/Resize/Convert/Export without re-uploading. Originals and all intermediates remain selectable.
 
 ## Scope and entry points
 
-1. Read core/types.ts, registry.ts, engine.ts, executors/local.ts, state/workspace.ts, storage/objects.ts and Workspace.tsx. Graph operations have input/output arrays, but the engine/executor accept exactly one image. Extend actual contracts deliberately; do not treat arrays as already functional multi-input support.
-2. Introduce validated required input counts/types and selection-based capability resolution. Adapt existing single-image operations without regressions. Immutable parameter snapshots, typed failures and graph atomicity must remain intact. A composition creates one new PNG; PDF-style multi-output stays later.
-3. Add a shared composition renderer for background color/transparent padding, optional rounded/frame styling, horizontal and vertical combining with gap/alignment and explicit unequal-size fit rules. Bound all outputs by existing dimension/pixel budgets before allocation. Preserve alpha where intended; no silent stretching or cropping.
-4. Reuse the workspace preview/parameters/history/export and shared registry/executor path. Accessible multi-input selection must clearly distinguish active preview from inputs used in an operation. Draft changes never commit; Apply creates the complete graph output; Cancel/failure retains sources and active selection.
-5. Keep all processing local. No resource deployment, API, new cloud bindings, accounts or remote template assets are needed. Compare/Mockup can reuse the resulting multi-input/composition foundation later; do not claim those families complete.
+1. Read the task ledger, product/architecture/transformation/privacy docs, core/types.ts, registry.ts, engine.ts, detection.ts, local.ts, storage/objects.ts, workspace state and UI. The engine already consumes/returns arrays; avoid rebuilding cardinality or creating a separate PDF mini-app.
+2. Evaluate maintained browser PDF manipulation/rendering libraries (e.g. pdf-lib and PDF.js): licenses, worker configuration, lazy bundles, static-asset limits, input/output verification and memory budgets. Install only what the delivered slice needs. Browser first; no cloud resources or external compute without demonstrated necessity.
+3. Generalize signature-based import and type-aware preview/export for PDF while preserving PNG/JPEG/WebP detection, previews and exports. A PDF is a first-class object with detected MIME, byte storage and page metadata. Explicitly reject corrupt/encrypted/unsupported PDFs; define bounded byte/document/page/render budgets before allocation. Image controls must not appear for PDFs.
+4. Register actual local merge, reorder, extract, split and selected-page-to-PNG operations with declared input/output counts. Merge is many-to-one; split/extract or page rendering proves real one-to-many outputs. Preserve input/document/page ordering, immutable parameter snapshots, output MIME/identity and atomic commit. Partial failure creates no partial graph result.
+5. Provide understandable page previews/selection/order and accessible mouse/touch/keyboard controls. Every output is selectable and can continue through compatible PDF/image tools and normal export. Reuse the shared engine/state/history; never process directly inside UI event handlers.
+6. Keep advanced compression, Office conversion, signatures, PDF annotations and genuine content redaction in DC-02. Image masks do not redact PDF text/layers. No fake controls, deployment, accounts or provisioning during DC-01.
 
 ## Acceptance checks
 
-- Single screenshot → padded/background/framed PNG → redact → resize → WebP → download, with exact dimensions/alpha/preview agreement and retained source.
-- Two different-size images → horizontal and vertical composition → new PNG references both source IDs → crop/annotation/export without re-uploading.
-- Single-image existing transformations retain contracts and pass all previous chains. Multi-input incompatible MIME/count/missing bytes/oversize allocation/encoding failure leave graph unchanged with clear errors.
-- Both source branches remain selectable. Refresh recovers composition bytes and multi-input relationships. Clear/expiry removes graph and bytes; storage/quota failures remain visible.
-- Mouse, touch and keyboard input selection/parameters at desktop and 390px mobile width. No horizontal page overflow or hidden required controls. Output contains only composed pixels.
-- Validate all bounds and preview/export agreement with pixel checks, including transparent PNG, uneven dimensions, gaps/alignment, edge placement and rounded/frame behavior.
-- No user bytes or content sent over the network. Clean up image bitmaps, preview URLs/listeners/workers.
-- Run Prettier, ESLint, typecheck, unit/integration tests, browser regressions and production build. Run browser tests with stable sources; do not trigger builds mid-run.
+- Two known PDFs with distinguishable page contents → ordered merge → reorder/extract → valid exported PDF with verified page count/order/content; every source referenced and retained.
+- One PDF → several usable PDF/PNG outputs committed atomically → select any output → further compatible operation. A rendered PNG chains through Frame/Annotate/Resize/WebP/export without re-uploading.
+- Refresh recovers all PDF/image bytes, relationships, selected output and parameter snapshots. Original branches remain usable; clear/expiry deletes bytes and graph.
+- Unsupported MIME/count/duplicate IDs, missing bytes, corrupt/encrypted files, invalid page selection, render/encode failure and memory limits have typed actionable errors and preserve graph/selection. Storage quota retains exportable in-memory work with a warning.
+- Real output bytes open/decode correctly; text/content and visual page checks verify ordering rather than relying only on metadata. PDF page rendering must respect rotation, page bounds and transparency/background behavior.
+- Desktop and 390px mobile selection/order/export, keyboard and touch, no page overflow or hidden required controls. No user content upload or third-party processing; worker/bitmap/URL cleanup verified.
+- Run formatting, lint, typecheck, unit/integration, complete browser regression suite and production build with stable source files. Existing image/composition/annotation/blur/redaction chains continue to pass.
 
 ## Completion and handoff
 
-Mark SS-03 IN PROGRESS before behavior edits. Record actual verification before DONE. Update catalog/product/architecture/privacy/status/roadmap and AGENTS.md as contracts change. Replace this brief with CP-01 Compare once the multi-input composition slice passes. Keep all ten families represented and claims limited to real processing.
+Mark DC-01 IN PROGRESS before behavior edits. Keep stable task IDs; record actual evidence/limits before DONE. Update catalog, product, architecture, transformation system, privacy, status, tracker, roadmap and this handoff. Preserve all ten families. Choose the next eligible task from the queue after this slice is verified; do not label advanced PDF capabilities complete. Open focused, validated PRs as requested by the user.

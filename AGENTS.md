@@ -85,3 +85,9 @@ Co-build a proprietary trading operation grounded in quantitative research, syst
 - Read `docs/TRANSFORMATION_CATALOG.md`, `docs/DESIGN_SYSTEM.md`, and `docs/REPOSITORY_INSPECTION.md` with the existing handoff. The current delegated request is preserved under `docs/sources/CLOUD_IMPLEMENTATION_REQUEST.md`; it authorizes implementation/verification and useful continuation, while source design alternatives stay historical.
 - Annotate version 2 must retain historical version 1 recovery. Pixel redaction must always be opaque, cover fractional edges, and disclose original retention. Blur is cosmetic. Never describe image masking as PDF content redaction.
 - Verify downloaded output bytes, preview agreement, transformation chains and failure preservation. Run `npm run lint`, typecheck, Vitest, format check and production build. Use `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium` when managed browser downloads are blocked but system Chromium is available.
+
+## SS-03 handoff and next family
+
+- Frame/Combine use ordered input arrays through the registry/engine/local executor; all returned outputs commit atomically. Do not regress cardinality validation, original retention, all-parent history, parameter snapshots or local recovery.
+- Composition draft preview uses actual processing without graph/storage commits; Apply creates PNG, Cancel preserves sources. Keep the preview/export boundary and bounded source/output budgets.
+- The user explicitly moved DC-01 ahead of Compare/Mockup after SS-03 to prove Document/PDF input. Read the new NEXT_TASK.md; preserve all ten families and avoid indefinite Screenshot Studio expansion. No PDF processing is implemented yet.

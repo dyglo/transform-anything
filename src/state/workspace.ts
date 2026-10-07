@@ -8,6 +8,7 @@ import {
 import { appendResult, executeTransformation } from '../core/engine';
 import { importImage, localExecutor } from '../executors/local';
 import { clearStorage, restoreSession, saveSession } from '../storage/objects';
+import { TransformError } from '../core/errors';
 import { validateAnnotations } from '../core/annotations';
 interface State {
   session: Session;
@@ -18,7 +19,11 @@ interface State {
   notice: string | null;
   init: () => Promise<void>;
   importFiles: (files: File[]) => Promise<void>;
-  apply: (op: TransformationDefinition, p: Parameters) => Promise<void>;
+  apply: (
+    op: TransformationDefinition,
+    p: Parameters,
+    inputIds?: readonly string[],
+  ) => Promise<boolean>;
   select: (id: string) => void;
   clear: () => Promise<void>;
   report: (error: string | null) => void;
@@ -113,25 +118,40 @@ export const useWorkspace = create<State>((set, get) => ({
     }
     set({ busy: false, error: failures.length ? failures.join(' ') : null });
   },
-  apply: async (op, p) => {
-    if (get().busy) return;
+  apply: async (op, p, inputIds) => {
+    if (!get().ready || get().busy) return false;
     const session = get().session;
     const active = session.objects.find((o) => o.id === session.activeId);
-    if (!active) return;
+    if (!active) return false;
     if (session.expiresAt <= Date.now()) {
       set({ error: 'This session has expired. Start a new session and import your image again.' });
-      return;
+      return false;
     }
     set({ busy: true, error: null, progress: null });
     try {
-      const result = await executeTransformation(active, op, p, [localExecutor], {
-        onProgress: (progress) => set({ progress }),
-      });
+      const ids = inputIds ?? [active.id];
+      const inputs = ids.map((id) => session.objects.find((o) => o.id === id));
+      if (inputs.some((o) => !o))
+        throw new TransformError(
+          'INCOMPATIBLE_INPUT',
+          'A selected image is unavailable. Select your images again.',
+        );
+      const result = await executeTransformation(
+        inputs.filter((o) => o !== undefined),
+        op,
+        p,
+        [localExecutor],
+        {
+          onProgress: (progress) => set({ progress }),
+        },
+      );
       const updated = appendResult(get().session, result);
       set({ session: updated });
       await persist(updated);
+      return true;
     } catch (e) {
       set({ error: e instanceof Error ? e.message : 'Processing failed.' });
+      return false;
     } finally {
       set({ busy: false, progress: null });
     }

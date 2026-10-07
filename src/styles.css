@@ -1712,3 +1712,83 @@ html {
 .annotation-numeric-grid .field:last-child:nth-child(odd) {
   grid-column: 1 / -1;
 }
+.composition-sources {
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+.composition-source {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.composition-source img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  background: #f3f4f6;
+}
+.composition-source span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.composition-source small {
+  display: block;
+  color: #667085;
+}
+.composition-order {
+  list-style: decimal;
+  padding-left: 24px;
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+.composition-order li {
+  padding: 4px 0;
+}
+.composition-order li span {
+  display: inline-block;
+  max-width: calc(100% - 66px);
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.composition-order button {
+  display: inline-flex;
+  padding: 6px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.composition-order button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.composition-properties input[type='color'] {
+  width: 100%;
+  height: 36px;
+  padding: 4px;
+}
+.composition-source {
+  min-height: 44px;
+}
+.composition-source input {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+.composition-order button {
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+.composition-order li span {
+  max-width: calc(100% - 88px);
+}

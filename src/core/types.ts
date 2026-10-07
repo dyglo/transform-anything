@@ -17,7 +17,15 @@ export interface TransformObject {
   preview: { objectId: string };
 }
 export type OperationId =
-  'crop' | 'resize' | 'rotate' | 'convert' | 'compress' | 'remove-bg' | 'annotate';
+  | 'crop'
+  | 'resize'
+  | 'rotate'
+  | 'convert'
+  | 'compress'
+  | 'remove-bg'
+  | 'annotate'
+  | 'frame'
+  | 'combine';
 export interface AnnotationElement {
   id: string;
   kind: 'text' | 'arrow' | 'rectangle' | 'highlight' | 'blur' | 'redact';
@@ -64,6 +72,7 @@ export type ExecutionRequirement =
   | 'browser-capture'
   | 'external';
 export interface ExecutionContext {
+  signal?: AbortSignal;
   onProgress?: (message: string) => void;
 }
 export interface TransformationDefinition {

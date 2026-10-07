@@ -68,7 +68,7 @@ describe('shared multi-input/output execution', () => {
         executeTransformation(inputs, op, {}, [{ supports: () => true, execute }]),
       ).rejects.toMatchObject({ code: 'INCOMPATIBLE_INPUT' });
     expect(execute).not.toHaveBeenCalled();
-    expect(compatibleInputs([a, b])).toEqual([]);
+    expect(compatibleInputs([a, b]).map((o) => o.id)).toEqual(['combine']);
     expect(supportsInputs(op, [a, b])).toBe(true);
   });
   it('rejects incomplete outputs and graph collisions without partial commits', async () => {

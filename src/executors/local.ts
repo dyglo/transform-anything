@@ -80,6 +80,12 @@ export const localExecutor: Executor = {
   supports: (req) => req === 'local-image' || req === 'local-background',
   async execute(objects, operation, parameters, context) {
     const object = objects[0];
+    if (operation.id === 'frame' || operation.id === 'combine') {
+      const result = await (
+        await import('./composition')
+      ).renderComposition(objects, parameters, operation.id === 'frame', context);
+      return [imageOutput(object, operation.id, result)];
+    }
     const blob = await resolveBytes(object.storage);
     const mime = (
       operation.id === 'remove-bg' || operation.id === 'annotate'
@@ -94,20 +100,26 @@ export const localExecutor: Executor = {
         : operation.id === 'remove-bg'
           ? await (await import('./removeBackground')).removeBackground(blob, context?.onProgress)
           : await process({ blob, operation: operation.id, parameters, mime });
-    const id = crypto.randomUUID();
-    const ext = mime === 'image/jpeg' ? 'jpg' : mime.split('/')[1];
-    return [
-      {
-        id,
-        type: 'image',
-        mimeType: result.blob.type,
-        name: `${object.name.replace(/\.[^.]+$/, '')}-${operation.id}.${ext}`,
-        size: result.blob.size,
-        createdAt: Date.now(),
-        metadata: { width: result.width, height: result.height },
-        storage: { kind: 'blob', blob: result.blob },
-        preview: { objectId: id },
-      },
-    ];
+    return [imageOutput(object, operation.id, result)];
   },
 };
+function imageOutput(
+  object: TransformObject,
+  operation: string,
+  result: RenderResult,
+): TransformObject {
+  const id = crypto.randomUUID();
+  const mime = result.blob.type;
+  const ext = mime === 'image/jpeg' ? 'jpg' : mime.split('/')[1];
+  return {
+    id,
+    type: 'image',
+    mimeType: mime,
+    name: `${object.name.replace(/\.[^.]+$/, '')}-${operation}.${ext}`,
+    size: result.blob.size,
+    createdAt: Date.now(),
+    metadata: { width: result.width, height: result.height },
+    storage: { kind: 'blob', blob: result.blob },
+    preview: { objectId: id },
+  };
+}
