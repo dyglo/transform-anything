@@ -147,9 +147,18 @@ export default function Workspace() {
   const [editorStarted, setEditorStarted] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const previewImage = useRef<HTMLImageElement>(null);
-  // A new active node is a new parameter context, including when branching.
+  const parameterContext = useRef<{ operationId: OperationId; sessionId: string } | null>(null);
+  // Single-input tools follow the active node; Combine owns a session-scoped draft.
   useEffect(() => {
     if (active) {
+      const previous = parameterContext.current;
+      parameterContext.current = { operationId, sessionId: session.id };
+      if (
+        operationId === 'combine' &&
+        previous?.operationId === 'combine' &&
+        previous.sessionId === session.id
+      )
+        return;
       const op =
         (operationId === 'combine'
           ? registry.find((o) => o.id === 'combine')
@@ -157,8 +166,9 @@ export default function Workspace() {
         registry.find((o) => o.id === 'resize')!;
       if (op.id !== operationId) setOperationId(op.id);
       setParameters(op.defaults([active]));
+      if (op.id === 'combine' && previous?.sessionId !== session.id) setInputIds([active.id]);
     }
-  }, [active, operationId]);
+  }, [active, operationId, session.id]);
   useEffect(() => {
     const handler = (e: ClipboardEvent) => {
       if (e.target instanceof Element && e.target.closest('input,textarea,[contenteditable]'))

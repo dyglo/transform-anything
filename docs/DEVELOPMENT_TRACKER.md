@@ -29,7 +29,7 @@ All tasks below completed by 6 October 2026. Detailed existing verification is i
 | IP-03  | Remove BG                                                                        | DONE   | `src/executors/background.worker.ts`, `removeBackground.ts`, model assets; real alpha/chaining/export/recovery and model failure checks; dedicated worker and same-origin assets |
 | DOC-01 | Complete docs index, full scope, status ledger and next-agent brief              | DONE   | `docs/` and root `AGENTS.md` reading/update rules; source briefs preserved with superseded decisions explained; document formatting/link checks                                  |
 
-Current SS-03 verification on 7 October 2026: 47 unit tests and 21 browser scenarios passed, plus a final mobile/touch recheck. Typecheck, ESLint, Prettier and production build pass. Staging/local builds and production Wrangler dry run passed during prerequisite verification. See IMPLEMENTATION_STATUS.md for current evidence. Earlier records below retain their historical dates.
+Current SS-03 verification on 7 October 2026: 49 unit tests and 22 browser scenarios passed, plus a final mobile/touch recheck. Typecheck, ESLint, Prettier and production build pass. Staging/local builds and production Wrangler dry run passed during prerequisite verification. See IMPLEMENTATION_STATUS.md for current evidence. Earlier records below retain their historical dates.
 
 ## Ordered implementation queue
 
@@ -112,3 +112,12 @@ At task start, inspected the clean existing repository and began SS-01 baseline 
 - Validation: Prettier, lint, typecheck; 47 unit tests / 11 files and 21 Chromium browser scenarios; production build and git diff whitespace check pass. Detailed results/limits are in IMPLEMENTATION_STATUS.md.
 - Limits: main-thread full-resolution Canvas preview, 2–8 composition inputs, source total/output each 40 megapixels with 16,384px sides; rounded corners rasterize; drafts are temporary. Real multi-output PDF tools remain TODO. Chromium desktop/mobile validated; other engines not exercised.
 - Next: DC-01 first local Document/PDF slice. Moved ahead of CP-01/MK-01 at explicit user request on 7 October 2026. No credential/financial/destructive blocker for the next local task.
+
+## Integration review fixes — PRs #1–#3
+
+- Status: DONE for code review and fixes, 7 October 2026. Preserve strict integration order #1 → #2 → #3 and rerun validation on integrated main. DC-01 remains TODO.
+- PR #1: image/SS-02 prerequisite reviewed and independently validated; no correction needed.
+- PR #2: `src/core/engine.ts` rejects sparse executor output arrays and non-string identities as typed failures before graph commits. `tests/unit/multiExecution.test.ts` covers those regressions and excessive output count.
+- PR #3: `src/pages/Workspace.tsx` preserves Combine draft layout/selection/order during imports and history selection within a session; `src/executors/composition.ts` releases canvas backing when context allocation fails. Added browser/unit regressions that first failed against the previous implementation.
+- Fresh validation of review fixes: Prettier, lint, typecheck, 49 unit tests / 11 files, all 22 desktop/mobile Chromium scenarios, production build, git diff whitespace and local Markdown links pass. Existing image/annotation/blur/redaction/background chains, composition chaining, multi-input execution, atomic output commits and persistence remain passing.
+- Limits unchanged: main-thread bounded Canvas composition and Chromium-only browser coverage. No remote CI status checks/workflows are configured; local validation was run independently. No new feature family, resource binding or deployment.

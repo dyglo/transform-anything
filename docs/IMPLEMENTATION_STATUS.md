@@ -62,8 +62,8 @@ No Cloudflare credentials or identities are configured in this environment. Live
 | `npm run format:check`                                                   | Pass                                        |
 | `npm run lint`                                                           | Pass, zero ESLint errors                    |
 | `npm run typecheck`                                                      | Pass                                        |
-| `npm test`                                                               | 47 unit tests pass across 11 files          |
-| `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e` | 21 browser scenarios pass                   |
+| `npm test`                                                               | 49 unit tests pass across 11 files          |
+| `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e` | 22 browser scenarios pass                   |
 | `npm run build:production`                                               | Pass; generated target transform-production |
 | `npx wrangler deploy --dry-run` after production build                   | Pass; no bindings; no deployment            |
 | `npm run build:staging`                                                  | Pass; generated target transform-staging    |
@@ -94,8 +94,14 @@ DONE after final acceptance: shared geometry/validation, local PNG rendering, or
 
 Verified new chains: Combine → Frame → Resize → WebP → Optimize → Export; composition → Crop → Highlight; Frame → Redact → Resize → WebP. Full-resolution rounded-frame preview and downloaded PNG pixels match exactly. Unequal input sizes, alpha, gaps, vertical proportional fit, ordered parents, snapshots, independent original branches and refresh recovery are checked. Invalid source counts/types/IDs/dimensions, missing bytes, excessive allocation, encoding failure, cancelled preview and quota/storage recovery preserve prior work. Bitmaps, canvas backing and transient preview URLs release on failure/change/clear. Desktop, 390px keyboard and real touch selection/order/apply pass with no page overflow. Existing image/background/annotation/blur/redaction chains remain passing.
 
-Current final verification: format check, lint, typecheck, 47 unit tests across 11 files, 21 system-Chromium browser scenarios, production build and git diff whitespace/local documentation links pass. The staging/local builds and Wrangler dry-run rows above describe earlier prerequisite verification; no new deployment occurred. Screenshots are ignored verification artifacts.
+Current final verification: format check, lint, typecheck, 49 unit tests across 11 files, 22 system-Chromium browser scenarios, production build and git diff whitespace/local documentation links pass. The staging/local builds and Wrangler dry-run rows above describe earlier prerequisite verification; no new deployment occurred. Screenshots are ignored verification artifacts.
 
 Limits: 2–8 Combine sources; source total and output each at most 40 megapixels / 16,384px sides. Full-resolution Canvas composition uses the main thread, so large supported images can occupy it while drawing; worker/caching optimization is deferred. Native size preserves pixels; common-size matching preserves aspect ratio with integer rounding; corners are rasterized. Composition drafts are transient and not recovered after refresh; applied settings/bytes are recovered. PDF import/preview/tools, real product multi-output transformations, Compare/Mockup and other families remain planned. Contract tests prove multi-output graph/byte behavior without claiming PDF exists. Only Chromium was exercised.
 
 Next task is DC-01 local Document/PDF detection/import/preview, merge/split/reorder/extract/page-to-PNG through the common pipeline. Its priority ahead of Compare/Mockup records the user’s explicit direction; the complete ten-family vision remains intact. No local SS-03 implementation blocker remains.
+
+## Review fixes — PRs #1–#3, 7 October 2026
+
+Reviewed the actual stacked changes against the shared architecture and preserved the prerequisite commit ancestry. PR #1 needed no code correction. PR #2 now rejects sparse executor output arrays and non-string identities as typed INVALID_OUTPUT failures, including excessive-output regression coverage. PR #3 keeps Combine's layout, source selection and ordering while importing additional images or selecting history within the same session, and releases the backing canvas when context allocation fails. New tests reproduced both PR #3 issues before the fixes.
+
+Fresh review validation: format, lint, typecheck, 49 unit tests / 11 files, all 22 desktop/mobile Chromium browser scenarios, production build, whitespace and local Markdown links. GitHub has no configured status checks/workflow runs on these PR heads; local results supply the validation evidence. Final integration requires the same checks on main after the strict #1 → #2 → #3 merge sequence. DC-01 remains the next task; no PDF implementation or deployment is included.

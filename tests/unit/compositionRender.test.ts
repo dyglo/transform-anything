@@ -41,6 +41,16 @@ function setup(encoded: Blob | null = new Blob(['png'], { type: 'image/png' })) 
   return { closes, decode, context, canvas };
 }
 describe('composition resource and failure boundaries', () => {
+  it('releases the canvas when context allocation fails before decoding', async () => {
+    const { canvas, decode } = setup();
+    Object.assign(canvas, { getContext: () => null });
+    await expect(renderComposition(inputs, compositionDefaults(inputs), false)).rejects.toThrow(
+      'composition canvas',
+    );
+    expect(decode).not.toHaveBeenCalled();
+    expect(canvas.width).toBe(0);
+    expect(canvas.height).toBe(0);
+  });
   it('decodes sequentially and closes each bitmap, then releases the canvas', async () => {
     const { closes, canvas, context } = setup();
     const result = await renderComposition(inputs, compositionDefaults(inputs), false);

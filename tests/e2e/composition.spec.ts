@@ -413,3 +413,52 @@ test.describe('touch composition', () => {
     await expect(page.getByRole('button', { name: /3. Combine/ })).toContainText('From steps 2, 1');
   });
 });
+
+test('adding images and selecting history preserve the composition draft', async ({ page }) => {
+  await importImages(page);
+  await combine(page);
+  await page.getByLabel('Direction', { exact: true }).selectOption('vertical');
+  await page.getByLabel('Image sizing', { exact: true }).selectOption('match');
+  await page.getByLabel('Common width', { exact: true }).fill('40');
+  await page.getByLabel('Background', { exact: true }).selectOption('#000000');
+  await expect(page.getByRole('button', { name: 'Apply combine' })).toBeEnabled();
+  const data = await page.evaluate(() => {
+    const c = Object.assign(document.createElement('canvas'), { width: 10, height: 10 });
+    c.getContext('2d')!.fillStyle = '#ffff00';
+    c.getContext('2d')!.fillRect(0, 0, 10, 10);
+    return c.toDataURL().split(',')[1];
+  });
+  await page.locator('input[aria-label="Import images"]').setInputFiles({
+    name: 'yellow.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(data, 'base64'),
+  });
+  await expect(page.locator('.history-node')).toHaveCount(3);
+  const assertDraft = async () => {
+    await expect(page.getByLabel('Padding', { exact: true })).toHaveValue('5');
+    await expect(page.getByLabel('Gap', { exact: true })).toHaveValue('10');
+    await expect(page.getByLabel('Direction', { exact: true })).toHaveValue('vertical');
+    await expect(page.getByLabel('Image sizing', { exact: true })).toHaveValue('match');
+    await expect(page.getByLabel('Common width', { exact: true })).toHaveValue('40');
+    await expect(page.getByLabel('Background', { exact: true })).toHaveValue('#000000');
+    await expect(page.getByRole('checkbox', { name: 'Include red.png' })).toBeChecked();
+    await expect(page.getByRole('checkbox', { name: 'Include blue.png' })).toBeChecked();
+    await expect(page.getByRole('checkbox', { name: 'Include yellow.png' })).not.toBeChecked();
+    await expect(page.getByLabel('Image order').locator('li > span')).toHaveText([
+      'red.png',
+      'blue.png',
+    ]);
+  };
+  await assertDraft();
+  await page.getByRole('button', { name: /2. Original/ }).click();
+  await assertDraft();
+  await page.getByRole('checkbox', { name: 'Include yellow.png' }).check();
+  await expect(page.getByRole('button', { name: 'Apply combine' })).toBeEnabled();
+  expect(await pixels(page, [[0, 0]])).toMatchObject({ width: 50, height: 170 });
+  await page.getByRole('button', { name: 'Apply combine' }).click();
+  await expect(page.getByRole('button', { name: 'Apply resize' })).toBeEnabled();
+  await expect(page.locator('.history-node')).toHaveCount(4);
+  await expect(page.getByRole('button', { name: /4. Combine/ })).toContainText(
+    'From steps 1, 2, 3',
+  );
+});
