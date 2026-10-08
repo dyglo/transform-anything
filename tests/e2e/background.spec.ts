@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 test('real local background removal creates alpha, preserves original, chains and exports', async ({
   page,
+  baseURL,
 }) => {
   test.setTimeout(120000);
   const errors: string[] = [];
@@ -85,7 +86,9 @@ test('real local background removal creates alpha, preserves original, chains an
   await expect(page.getByRole('button', { name: /2. Remove BG/ })).toBeVisible();
   expect(writes).toEqual([]);
   expect(
-    requests.every((url) => url.startsWith('http://127.0.0.1:5173/') || url.startsWith('blob:')),
+    requests.every(
+      (url) => url.startsWith(new URL(baseURL!).origin + '/') || url.startsWith('blob:'),
+    ),
   ).toBe(true);
   expect(errors).toEqual([]);
 });

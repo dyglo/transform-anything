@@ -51,6 +51,7 @@ async function box(page: Page, values: Record<string, number>) {
 
 test('opaque redaction and real blur match preview, retain alpha, export only pixels, chain and recover', async ({
   page,
+  baseURL,
 }) => {
   const errors: string[] = [],
     remote: string[] = [];
@@ -58,7 +59,7 @@ test('opaque redaction and real blur match preview, retain alpha, export only pi
   page.on('request', (r) => {
     if (
       r.method() !== 'GET' ||
-      (!r.url().startsWith('http://127.0.0.1:5173/') &&
+      (!r.url().startsWith(new URL(baseURL!).origin + '/') &&
         !r.url().startsWith('blob:') &&
         !r.url().startsWith('data:'))
     )

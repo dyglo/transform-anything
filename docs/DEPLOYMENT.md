@@ -21,7 +21,13 @@ Vite, React/TypeScript, Cloudflare build/deploy configuration and every transfor
 
 ## Validation
 
-Local and preview results will be recorded here before the final handoff. No local test or READY deployment alone constitutes production recovery.
+- PR: [#4 — Fix Vercel production 404 by serving dist/client](https://github.com/dyglo/transform-anything/pull/4), against `main`, branch `codex/fix-vercel-production`. Open/unmerged at handoff; no merge or production promotion performed.
+- Local: `npm ci`, `npm run format`, `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` (49 tests / 11 files), `npm run build:production`, and `git diff --check` passed. Formatting normalized Windows checkout line endings without adding unrelated source changes to the PR.
+- Local development-server suite: `npm run test:e2e` had 21 passes and one timeout waiting for the Remove BG history node (100 seconds). This local-dev limitation remains recorded; no transformation code was changed to hide it. Real background removal passes on the deployed production-mode preview.
+- Tested preview: [transform-anything-j6fxq77zm-next-q.vercel.app](https://transform-anything-j6fxq77zm-next-q.vercel.app), deployment `dpl_4ZJ4c92UzAsumbtKueRfVoZrSkqL`, commit `ef01930`, READY, source `git`, framework `vite`, build duration approximately 19 seconds. Build logs confirm `build:production`, `dist/client/index.html`, build completion and successful output deployment. The successful Git preview establishes that the repository integration processes branch pushes.
+- Protected preview accessed through the Vercel connector's temporary authenticated link/cookie; protection was not disabled. An ignored Playwright wrapper supplied cookie storage to the same suite. Fresh stable rerun: **all 22 desktop/mobile Chromium scenarios passed in 1.5 minutes**. `tests/e2e/background.spec.ts` and `redaction.spec.ts` now derive their allowed origin from `baseURL`, keeping no-upload checks effective outside localhost. Preview and local application/configuration are identical; subsequent test/documentation changes do not alter app output.
+- Preview HTTP: `/`, `/workspace`, app fallback `/missing-route`, JS, CSS and favicon return 200; JS/CSS have correct MIME. Real model loading/inference and worker/WASM execution pass in the background test. Desktop and mobile screenshots visually reviewed after landscape image decoding; workspace image/composition outputs, downloads and persistence verified by browser/pixel tests. Browser smoke reports no unexpected page errors. Connector event reads expose build logs, not a complete client runtime log stream; browser evidence covers client exceptions.
+- Production alias rechecked at handoff: still HTTP **404**, pointing to the original READY deployment. Production is **not fixed yet**. DEP-01 remains IN PROGRESS pending merge and the live checks below. No CI-only success claim is made.
 
 ## Exact post-merge verification
 
