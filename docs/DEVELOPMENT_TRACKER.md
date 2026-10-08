@@ -1,5 +1,11 @@
 # Development tracker
 
+## DEP-01 — Vercel production deployment repair
+
+Status: **IN PROGRESS**, 8 October 2026. User-requested deployment-only interruption; DC-01 remains TODO and is not authorized in this task. Diagnose deployed output, add minimal Vercel configuration, validate local and preview workflows, open a PR against main, then verify production after merge. Production acceptance remains pending until the live alias is verified.
+
+Implementation/verification: `vercel.json`, `playwright.config.ts`, deployed-origin assertions in `tests/e2e/background.spec.ts` and `redaction.spec.ts`; formatting/lint/typecheck, 49 unit tests and production build pass. All 22 existing browser scenarios pass against the READY Vercel preview, including local import, image processing, real Remove BG, Combine/Frame/Resize/export and desktop/mobile rendering. Local dev run had one Remove BG timeout (21 passed). [PR #4](https://github.com/dyglo/transform-anything/pull/4) is open against main. Production recheck remains 404; do not mark DONE until merge/live checks pass. Full evidence and post-merge entry points: [DEPLOYMENT.md](DEPLOYMENT.md). Next feature remains DC-01 after the deployment interruption; it was not started.
+
 Updated: 7 October 2026. This is the authoritative task status ledger.
 
 **SS-03 is DONE. Next eligible task: DC-01 — first local Document/PDF vertical slice.** DC-01 priority changed by explicit user request on 7 October 2026; all stable IDs remain intact.

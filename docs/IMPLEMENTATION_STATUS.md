@@ -1,5 +1,9 @@
 # Implementation status
 
+## DEP-01 — Vercel repair, 8 October 2026
+
+IN PROGRESS pending production acceptance. Root `vercel.json` fixes the proven `dist` versus `dist/client` mismatch and supplies production build/SPA routing. Formatting, lint, typecheck, 49 unit tests, production build and whitespace checks pass. Local dev browser run: 21 pass / one real Remove BG timeout. Production-mode Vercel preview: READY; HTTP 200 homepage/workspace and correct asset MIME; all 22 Chromium desktop/mobile scenarios pass, including real background inference, Combine → Frame → Resize → WebP/export, pixel output, recovery and failure preservation. Screenshots reviewed; browser smoke has no page errors. Playwright accepts a deployed base URL and no-upload assertions derive its origin. [PR #4](https://github.com/dyglo/transform-anything/pull/4) is open/unmerged; production still returns 404. [DEPLOYMENT.md](DEPLOYMENT.md) records deployment IDs, tested preview, actual commands/results, limits and exact post-merge checks. No production success claimed; DC-01 stays TODO.
+
 Updated: 7 October 2026. The stable ledger is [DEVELOPMENT_TRACKER.md](DEVELOPMENT_TRACKER.md). The next task is [DC-01: first local Document/PDF slice](NEXT_TASK.md).
 
 ## Repository inspection and preservation

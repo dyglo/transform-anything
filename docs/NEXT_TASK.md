@@ -1,5 +1,7 @@
 # Next task — DC-01: first local Document/PDF vertical slice
 
+Deployment interruption, 8 October 2026: DEP-01 takes priority only for this user-requested Vercel repair. DC-01 remains TODO; do not begin it during deployment work. Complete the post-merge checks in [DEPLOYMENT.md](DEPLOYMENT.md) before claiming production recovery. The feature queue below is unchanged.
+
 Status: **TODO**. Prepared 7 October 2026 after SS-03. Dependencies: F-01–03 and SS-03. Shared ordered multi-input/output execution, atomic graph/storage commits and composition are ready. The user explicitly prioritized proving a different family after SS-03; DC-01 moves ahead of CP-01/MK-01. Do not begin another long Screenshot Studio expansion first.
 
 ## User outcome
