@@ -1,5 +1,7 @@
 # Roadmap
 
+8 October 2026: the user requested a deployment-only interruption (DEP-01) to repair the existing Vercel production URL. This does not reorder the feature milestones or authorize DC-01. Production recovery requires live post-merge verification, recorded in [DEPLOYMENT.md](DEPLOYMENT.md).
+
 Updated: 7 October 2026. [DEVELOPMENT_TRACKER.md](DEVELOPMENT_TRACKER.md) owns task status; [NEXT_TASK.md](NEXT_TASK.md) defines the next implementation. The complete ten-family scope is in [PRODUCT_SPEC.md](PRODUCT_SPEC.md).
 
 ## 1. Foundation and core Image Prep — delivered

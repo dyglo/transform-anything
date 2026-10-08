@@ -1,5 +1,9 @@
 # Implementation status
 
+## DEP-01 — Vercel repair, 8 October 2026
+
+IN PROGRESS: production's READY deployment publishes the parent `dist` directory, while the app lives at `dist/client/index.html`. Live `/` is 404 and `/client/index.html` is 200. Root `vercel.json` selects `dist/client`, the existing production build and SPA fallback. `playwright.config.ts` allows deployed-origin regression checks. Lint, typecheck, 49 unit tests and production build pass locally. Prettier passes with `--end-of-line auto` for this Windows CRLF checkout; the default format check flags pre-existing CRLF files. Browser and preview verification are pending. No production recovery is claimed before merge/live verification. [DEPLOYMENT.md](DEPLOYMENT.md) contains evidence and exact post-merge checks. DC-01 remains TODO.
+
 Updated: 7 October 2026. The stable ledger is [DEVELOPMENT_TRACKER.md](DEVELOPMENT_TRACKER.md). The next task is [DC-01: first local Document/PDF slice](NEXT_TASK.md).
 
 ## Repository inspection and preservation

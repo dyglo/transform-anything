@@ -1,5 +1,7 @@
 # Transform development documentation
 
+The 8 October 2026 deployment-only task is DEP-01. [DEPLOYMENT.md](DEPLOYMENT.md) records Vercel diagnosis, configuration and post-merge acceptance. DC-01 remains the next feature, outside this deployment task's scope.
+
 Updated: 7 October 2026. Foundation, core Image Prep, SS-01 annotations, SS-02 blur/opaque redaction and SS-03 frames/padding/backgrounds/combine are verified. Shared multi-input/output execution is real. The next task is **DC-01: the first local Document/PDF vertical slice**.
 
 ## Reading order

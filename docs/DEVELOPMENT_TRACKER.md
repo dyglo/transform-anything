@@ -1,5 +1,9 @@
 # Development tracker
 
+## DEP-01 — Vercel production deployment repair
+
+Status: **IN PROGRESS**, 8 October 2026. User-requested deployment-only interruption; DC-01 remains TODO and is not authorized in this task. Diagnose deployed output, add minimal Vercel configuration, validate local and preview workflows, open a PR against main, then verify production after merge. Production acceptance remains pending until the live alias is verified.
+
 Updated: 7 October 2026. This is the authoritative task status ledger.
 
 **SS-03 is DONE. Next eligible task: DC-01 — first local Document/PDF vertical slice.** DC-01 priority changed by explicit user request on 7 October 2026; all stable IDs remain intact.

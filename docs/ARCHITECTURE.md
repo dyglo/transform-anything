@@ -1,5 +1,9 @@
 # Architecture
 
+## Vercel static hosting
+
+The existing Cloudflare Vite plugin emits browser assets into `dist/client`, alongside a separate Worker bundle. Vercel serves only `dist/client` using the existing `npm run build:production` command, selected explicitly in root `vercel.json`. The SPA rewrite serves `index.html` for client routes such as `/workspace`; existing files retain normal static serving. No Vercel Function, Cloudflare resource binding, transformation executor or byte-upload endpoint is introduced. Cloudflare deployment scripts/configuration are retained. See [DEPLOYMENT.md](DEPLOYMENT.md) for incident evidence and release verification.
+
 ## Browser first → Cloudflare second → external compute only when required
 
 ```mermaid
